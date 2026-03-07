@@ -34,7 +34,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
           <nav className="hidden md:flex gap-8 items-center">
             <Link to="/" className="text-sm font-semibold text-zinc-600 hover:text-zinc-900 transition-colors">Início</Link>
-            <Link to="/servicos" className="text-sm font-semibold text-zinc-600 hover:text-zinc-900 transition-colors">Serviços</Link>
+            <a href="/#servicos" className="text-sm font-semibold text-zinc-600 hover:text-zinc-900 transition-colors">Serviços</a>
             <Link to="/sobre" className="text-sm font-semibold text-zinc-600 hover:text-zinc-900 transition-colors">Sobre</Link>
             <Link to="/agendar" className="bg-zinc-900 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-zinc-800 transition-all shadow-lg shadow-zinc-900/10 active:scale-95">
               Agendar Agora
@@ -154,9 +154,9 @@ const Home = () => (
           <Link to="/agendar" className="bg-zinc-900 text-white px-10 py-5 rounded-2xl font-bold text-lg hover:bg-zinc-800 shadow-2xl shadow-zinc-900/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-3">
             AGENDAR AGORA <ChevronRight className="w-5 h-5" />
           </Link>
-          <Link to="/servicos" className="bg-white border-2 border-zinc-100 text-zinc-900 px-10 py-5 rounded-2xl font-bold text-lg hover:bg-zinc-50 transition-all hover:border-zinc-200">
+          <a href="#servicos" className="bg-white border-2 border-zinc-100 text-zinc-900 px-10 py-5 rounded-2xl font-bold text-lg hover:bg-zinc-50 transition-all hover:border-zinc-200">
             VER SERVIÇOS
-          </Link>
+          </a>
         </motion.div>
 
         <div className="flex items-center gap-6 pt-8">
@@ -192,7 +192,7 @@ const Home = () => (
       </motion.div>
     </section>
 
-    <section className="bg-zinc-900 py-32 overflow-hidden relative">
+    <section id="servicos" className="bg-zinc-900 py-32 overflow-hidden relative">
       <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white blur-[120px] rounded-full"></div>
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-zinc-500 blur-[120px] rounded-full"></div>
