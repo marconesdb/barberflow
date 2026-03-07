@@ -1,0 +1,5 @@
+{
+  "name": "BarberFlow - Sistema de Agendamento",
+  "description": "Sistema completo de agendamento para barbearias com autenticação Google, gestão de serviços, barbeiros e relatórios.",
+  "requestFramePermissions": []
+}
