@@ -14,7 +14,9 @@ const app = express();
 const PORT = Number(process.env.PORT) || 3333;
 
 // ─── Middlewares globais ────────────────────────────────────────────────────
-app.use(helmet());
+app.use(helmet({
+  crossOriginOpenerPolicy: false,
+}));
 app.use(cors({ origin: '*', credentials: false }));
 app.use(express.json());
 
