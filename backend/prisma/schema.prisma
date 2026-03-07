@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id            String   @id @default(uuid())
+  nome          String
+  telefone      String?
+  email         String   @unique
+  endereco      String?
+  senhaHash     String?
+  papel         String   @default("CLIENTE")
+  googleId      String?  @unique
+  fotoUrl       String?
+  provedorAuth  String   @default("LOCAL")
+  ativo         Boolean  @default(true)
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  agendamentos   Agendamento[]  @relation("ClienteAgendamentos")
+  barbeiro       Barbeiro?
+  authProvedores AuthProvedor[]
+
+  @@map("usuarios")
+}
+
+model AuthProvedor {
+  id          String   @id @default(uuid())
+  usuarioId   String
+  provedor    String
+  provedorUid String
+  email       String?
+  fotoUrl     String?
+  criadoEm   DateTime @default(now())
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@unique([provedor, provedorUid])
+  @@map("auth_provedores")
+}
+
+model Barbeiro {
+  id             String   @id @default(uuid())
+  usuarioId      String   @unique
+  fotoUrl        String?
+  especialidades String
+  ativo          Boolean  @default(true)
+
+  usuario      Usuario           @relation(fields: [usuarioId], references: [id])
+  agendamentos Agendamento[]
+  horarios     HorarioBarbeiro[]
+  avaliacoes   Avaliacao[]
+
+  @@map("barbeiros")
+}
+
+model HorarioBarbeiro {
+  id         String @id @default(uuid())
+  barbeiroId String
+  diaSemana  Int
+  horaInicio String
+  horaFim    String
+
+  barbeiro Barbeiro @relation(fields: [barbeiroId], references: [id])
+
+  @@map("horarios_barbeiro")
+}
+
+model Servico {
+  id             String   @id @default(uuid())
+  nome           String
+  descricao      String?
+  preco          Float
+  duracaoMinutos Int
+  imagemUrl      String?
+  ativo          Boolean  @default(true)
+  criadoEm      DateTime @default(now())
+
+  agendamentos Agendamento[]
+
+  @@map("servicos")
+}
+
+model Agendamento {
+  id             String    @id @default(uuid())
+  codigoControle String    @unique
+  clienteId      String
+  barbeiroId     String
+  servicoId      String
+  dataHora       DateTime
+  status         String    @default("CONFIRMADO")
+  observacao     String?
+  criadoEm      DateTime  @default(now())
+  canceladoEm   DateTime?
+  atualizadoEm  DateTime  @updatedAt
+
+  cliente      Usuario                @relation("ClienteAgendamentos", fields: [clienteId], references: [id])
+  barbeiro     Barbeiro               @relation(fields: [barbeiroId], references: [id])
+  servico      Servico                @relation(fields: [servicoId], references: [id])
+  historico    HistoricoAgendamento[]
+  notificacoes Notificacao[]
+  avaliacao    Avaliacao?
+
+  @@map("agendamentos")
+}
+
+model HistoricoAgendamento {
+  id             String   @id @default(uuid())
+  agendamentoId  String
+  statusAnterior String
+  statusNovo     String
+  alteradoPor    String
+  alteradoEm    DateTime @default(now())
+
+  agendamento Agendamento @relation(fields: [agendamentoId], references: [id])
+
+  @@map("historico_agendamentos")
+}
+
+model Notificacao {
+  id            String   @id @default(uuid())
+  agendamentoId String
+  tipo          String
+  canal         String
+  enviadoEm    DateTime @default(now())
+
+  agendamento Agendamento @relation(fields: [agendamentoId], references: [id])
+
+  @@map("notificacoes")
+}
+
+model Avaliacao {
+  id            String   @id @default(uuid())
+  agendamentoId String   @unique
+  barbeiroId    String
+  clienteId     String
+  nota          Int
+  comentario    String?
+  criadoEm     DateTime @default(now())
+
+  agendamento Agendamento @relation(fields: [agendamentoId], references: [id])
+  barbeiro    Barbeiro    @relation(fields: [barbeiroId], references: [id])
+
+  @@map("avaliacoes")
+}

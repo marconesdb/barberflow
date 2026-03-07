@@ -1,0 +1,1 @@
+import { Request } from 'express';export interface JwtPayload {  userId: string;  papel: 'CLIENTE' | 'BARBEIRO' | 'ADMIN';}export interface AuthRequest extends Request {  user?: JwtPayload;}export type Papel = 'CLIENTE' | 'BARBEIRO' | 'ADMIN';export type StatusAgendamento = 'PENDENTE' | 'CONFIRMADO' | 'CANCELADO' | 'CONCLUIDO';
