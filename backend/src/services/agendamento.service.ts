@@ -156,7 +156,7 @@ export async function buscarPorId(id: string, userId: string, papel: string) {
     include: {
       servico: true,
       barbeiro: { include: { usuario: true } },
-      cliente: { select: { nome: true, email: true, telefone: true } },
+      cliente: { select: { nome: true, email: true, telefone: true, endereco: true } },
       historico: { orderBy: { alteradoEm: 'desc' } },
       avaliacao: true,
     },
