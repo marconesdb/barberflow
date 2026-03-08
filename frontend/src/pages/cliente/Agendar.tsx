@@ -92,7 +92,7 @@ export default function Agendar() {
 
     const loadingToast = toast.loading('Processando seu agendamento...');
     try {
-      const dataHora = `${selectedDate}T${selectedTime}:00`;
+      const dataHora = new Date(`${selectedDate}T${selectedTime}:00`).toISOString();
       const res = await api.post('/agendamentos', {
         barbeiroId: selectedBarbeiro.id,
         servicoId: selectedServico.id,
