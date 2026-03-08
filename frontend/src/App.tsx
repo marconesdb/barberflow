@@ -4,7 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './store/authStore';
 import { Scissors, Calendar, Clock, MapPin, Phone, Instagram, Facebook, ChevronRight, Star } from 'lucide-react';
 import { motion } from 'motion/react';
-
+import Admin from './pages/admin/Admin';
 import Agendar from './pages/cliente/Agendar';
 import Login from './pages/cliente/Login';
 import Perfil from './pages/cliente/Perfil';
@@ -281,8 +281,10 @@ export default function App() {
         <Route path="/"        element={<MainLayout><Home /></MainLayout>} />
         <Route path="/agendar" element={<MainLayout><Agendar /></MainLayout>} />
         <Route path="/perfil"  element={<MainLayout><Perfil /></MainLayout>} />
+        <Route path="/admin" element={<MainLayout><Admin /></MainLayout>} />
         <Route path="/login"   element={<Login />} />
         <Route path="*"        element={<Navigate to="/" />} />
+        
       </Routes>
     </BrowserRouter>
   );

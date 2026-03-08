@@ -43,3 +43,7 @@
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
+@media print {
+  header, footer, nav, .print\:hidden { display: none !important; }
+  body { background: white; }
+}
