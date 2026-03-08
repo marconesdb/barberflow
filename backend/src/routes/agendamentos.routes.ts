@@ -1,4 +1,3 @@
-
 // ════════════════════════════════════════════════════════════
 // backend/src/routes/agendamentos.routes.ts
 // ════════════════════════════════════════════════════════════
@@ -9,6 +8,18 @@ import * as AS from '../services/agendamento.service.js';
 import { AuthRequest as AR3 } from '../types/index.js';
 
 export const agendamentosRouter = AgendRouter();
+
+// ── Disponibilidade (não requer auth) ───────────────────────
+agendamentosRouter.get('/disponibilidade', async (req, res, next) => {
+  try {
+    const { barbeiroId, data, servicoId } = req.query as Record<string, string>;
+    if (!barbeiroId || !data || !servicoId) {
+      res.status(400).json({ error: 'barbeiroId, data e servicoId são obrigatórios' });
+      return;
+    }
+    res.json(await AS.disponibilidade(barbeiroId, data, servicoId));
+  } catch (e) { next(e); }
+});
 
 agendamentosRouter.post('/', a3, v3(createAgendamentoSchema), async (req: AR3, res, next) => {
   try {

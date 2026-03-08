@@ -20,20 +20,15 @@ interface Barbeiro {
   especialidades: string;
 }
 
-function gerarProtocolo() {
-  const now = new Date();
-  const ano = now.getFullYear();
-  const rand = Math.floor(Math.random() * 900000) + 100000;
-  return `BF-${ano}-${rand}`;
-}
-
 export default function Agendar() {
   const { user } = useAuthStore();
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [barbeiros, setBarbeiros] = useState<Barbeiro[]>([]);
+  const [horariosDisponiveis, setHorariosDisponiveis] = useState<string[]>([]);
+  const [loadingHorarios, setLoadingHorarios] = useState(false);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState(1);
-  const [protocolo] = useState(gerarProtocolo);
+  const [agendamentoCriado, setAgendamentoCriado] = useState<any>(null);
 
   const [selectedServico, setSelectedServico] = useState<Servico | null>(null);
   const [selectedBarbeiro, setSelectedBarbeiro] = useState<Barbeiro | null>(null);
@@ -58,17 +53,58 @@ export default function Agendar() {
     fetchData();
   }, []);
 
+  // Busca horários disponíveis quando barbeiro, data e serviço estão selecionados
+  useEffect(() => {
+    if (!selectedBarbeiro || !selectedDate || !selectedServico) return;
+    const fetchHorarios = async () => {
+      setLoadingHorarios(true);
+      setSelectedTime('');
+      try {
+        const res = await api.get('/agendamentos/disponibilidade', {
+          params: {
+            barbeiroId: selectedBarbeiro.id,
+            data: selectedDate,
+            servicoId: selectedServico.id,
+          },
+        });
+        setHorariosDisponiveis(res.data.horariosDisponiveis || []);
+      } catch {
+        toast.error('Erro ao buscar horários');
+        setHorariosDisponiveis([]);
+      } finally {
+        setLoadingHorarios(false);
+      }
+    };
+    fetchHorarios();
+  }, [selectedBarbeiro, selectedDate, selectedServico]);
+
   const handleAgendar = async () => {
     if (!selectedServico || !selectedBarbeiro || !selectedDate || !selectedTime) {
       toast.error('Preencha todos os campos');
       return;
     }
+
+    if (!user) {
+      toast.error('Você precisa estar logado para agendar');
+      window.location.href = '/login';
+      return;
+    }
+
     const loadingToast = toast.loading('Processando seu agendamento...');
-    setTimeout(() => {
+    try {
+      const dataHora = `${selectedDate}T${selectedTime}:00`;
+      const res = await api.post('/agendamentos', {
+        barbeiroId: selectedBarbeiro.id,
+        servicoId: selectedServico.id,
+        dataHora,
+      });
+      setAgendamentoCriado(res.data);
       toast.dismiss(loadingToast);
       setStep(4);
       toast.success('Agendamento confirmado!');
-    }, 1500);
+    } catch {
+      toast.dismiss(loadingToast);
+    }
   };
 
   const handlePrint = () => window.print();
@@ -78,6 +114,8 @@ export default function Agendar() {
     const [y, m, day] = d.split('-');
     return `${day}/${m}/${y}`;
   };
+
+  const protocolo = agendamentoCriado?.codigoControle || '—';
 
   if (loading) return (
     <div className="min-h-[60vh] flex items-center justify-center">
@@ -177,24 +215,44 @@ export default function Agendar() {
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Selecione a Data</label>
-                    <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)}
+                    <input type="date" value={selectedDate}
+                      min={new Date().toISOString().split('T')[0]}
+                      onChange={(e) => setSelectedDate(e.target.value)}
                       className="w-full p-6 rounded-3xl border-2 border-zinc-100 bg-white focus:outline-none focus:border-zinc-900 text-lg font-bold" />
                   </div>
-                  <div className="space-y-4">
-                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Horários Disponíveis</label>
-                    <div className="grid grid-cols-3 gap-3">
-                      {['09:00','10:00','11:00','14:00','15:00','16:00','17:00','18:00','19:00'].map((time) => (
-                        <button key={time} onClick={() => setSelectedTime(time)}
-                          className={`p-4 rounded-2xl border-2 font-bold transition-all ${selectedTime === time ? 'border-zinc-900 bg-zinc-900 text-white shadow-lg' : 'border-zinc-100 bg-white hover:border-zinc-300'}`}>
-                          {time}
-                        </button>
-                      ))}
+
+                  {selectedDate && (
+                    <div className="space-y-4">
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                        Horários Disponíveis
+                      </label>
+                      {loadingHorarios ? (
+                        <div className="flex items-center gap-3 text-zinc-400 text-sm font-medium">
+                          <div className="w-5 h-5 border-2 border-zinc-300 border-t-zinc-900 rounded-full animate-spin" />
+                          Buscando horários...
+                        </div>
+                      ) : horariosDisponiveis.length === 0 ? (
+                        <div className="p-6 rounded-2xl bg-zinc-50 text-center text-zinc-400 font-medium">
+                          Nenhum horário disponível nesta data. Tente outro dia.
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-3 gap-3">
+                          {horariosDisponiveis.map((time) => (
+                            <button key={time} onClick={() => setSelectedTime(time)}
+                              className={`p-4 rounded-2xl border-2 font-bold transition-all ${selectedTime === time ? 'border-zinc-900 bg-zinc-900 text-white shadow-lg' : 'border-zinc-100 bg-white hover:border-zinc-300'}`}>
+                              {time}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </div>
+                  )}
                 </div>
                 <div className="pt-8 flex gap-4">
                   <Button variant="outline" className="flex-1 py-6" onClick={() => setStep(2)}>Voltar</Button>
-                  <Button className="flex-[2] py-6 text-lg" onClick={handleAgendar} disabled={!selectedDate || !selectedTime}>Finalizar Reserva</Button>
+                  <Button className="flex-[2] py-6 text-lg" onClick={handleAgendar} disabled={!selectedDate || !selectedTime || loadingHorarios}>
+                    Finalizar Reserva
+                  </Button>
                 </div>
               </motion.div>
             )}
@@ -203,7 +261,6 @@ export default function Agendar() {
               <motion.div key="step4" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
                 className="bg-white p-10 rounded-[48px] border-2 border-zinc-100 shadow-2xl print:shadow-none print:border-none">
 
-                {/* Cabeçalho do comprovante */}
                 <div className="text-center space-y-3 border-b border-zinc-100 pb-8 mb-8">
                   <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto">
                     <CheckCircle2 className="w-10 h-10" />
@@ -217,7 +274,6 @@ export default function Agendar() {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-8">
-                  {/* Dados do cliente */}
                   <div className="space-y-4">
                     <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest">Dados do Cliente</h3>
                     <div className="bg-zinc-50 rounded-3xl p-6 space-y-3">
@@ -236,7 +292,6 @@ export default function Agendar() {
                     </div>
                   </div>
 
-                  {/* Dados do agendamento */}
                   <div className="space-y-4">
                     <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest">Detalhes do Agendamento</h3>
                     <div className="bg-zinc-50 rounded-3xl p-6 space-y-3">
@@ -258,7 +313,6 @@ export default function Agendar() {
                   </div>
                 </div>
 
-                {/* Rodapé */}
                 <div className="mt-8 p-4 bg-zinc-50 rounded-2xl text-center text-xs text-zinc-400 space-y-1">
                   <p className="font-bold text-zinc-600">BarberFlow — Av. Paulista, 1000 · São Paulo/SP</p>
                   <p>(11) 99999-9999 · contato@barberflow.com.br</p>
