@@ -148,3 +148,14 @@ model Avaliacao {
 
   @@map("avaliacoes")
 }
+
+model DiaBloqueado {
+  id        String   @id @default(uuid())
+  data      String
+  motivo    String?  @db.Text
+  criadoPor String
+  criadoEm  DateTime @default(now())
+
+  @@unique([data])
+  @@map("dias_bloqueados")
+}

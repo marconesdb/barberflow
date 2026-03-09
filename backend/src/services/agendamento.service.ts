@@ -97,6 +97,7 @@ export async function disponibilidade(barbeiroId: string, data: string, servicoI
 }
 
 // ─── Criar agendamento ───────────────────────────────────────────────────────
+// Substitua a função criar completa:
 export async function criar(
   clienteId: string,
   data: { barbeiroId: string; servicoId: string; dataHora: string; observacao?: string }
@@ -111,6 +112,11 @@ export async function criar(
 
   const dataHora = new Date(data.dataHora);
   if (dataHora <= new Date()) throw new AppError('Não é possível agendar em data/hora passada', 400);
+
+  // ── Verifica se o dia está bloqueado ─────────────────────
+  const dataStr = dataHora.toISOString().split('T')[0]; // "2026-03-10"
+  const diaBloqueado = await prisma.diaBloqueado.findUnique({ where: { data: dataStr } });
+  if (diaBloqueado) throw new AppError('Este dia está bloqueado para agendamentos.', 422);
 
   const conflito = await verificarConflito(data.barbeiroId, dataHora, servico.duracaoMinutos);
   if (conflito) throw new AppError('Horário indisponível. Escolha outro horário.', 409);

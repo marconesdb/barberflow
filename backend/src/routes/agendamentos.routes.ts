@@ -17,6 +17,12 @@ agendamentosRouter.get('/disponibilidade', async (req, res, next) => {
       res.status(400).json({ error: 'barbeiroId, data e servicoId são obrigatórios' });
       return;
     }
+    // Verifica se o dia está bloqueado
+    const bloqueio = await (await import('../lib/prisma.js')).default.diaBloqueado.findUnique({ where: { data } });
+    if (bloqueio) {
+      res.json({ data, barbeiroId, horariosDisponiveis: [], bloqueado: true, motivo: bloqueio.motivo });
+      return;
+    }
     res.json(await AS.disponibilidade(barbeiroId, data, servicoId));
   } catch (e) { next(e); }
 });

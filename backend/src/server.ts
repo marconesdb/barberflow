@@ -9,6 +9,8 @@ import { barbeirosRouter } from './routes/barbeiros.routes.js';
 import { agendamentosRouter } from './routes/agendamentos.routes.js';
 import { adminRouter } from './routes/admin.routes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
+import { bloqueiosRouter } from './routes/bloqueios.routes.js';
+
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3333;
@@ -30,6 +32,7 @@ app.use('/api/servicos',     servicosRouter);
 app.use('/api/barbeiros',    barbeirosRouter);
 app.use('/api/agendamentos', agendamentosRouter);
 app.use('/api/admin',        adminRouter);
+app.use('/api/bloqueios', bloqueiosRouter);
 
 // ─── Error handler global ───────────────────────────────────────────────────
 app.use(errorHandler);
