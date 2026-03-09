@@ -220,10 +220,8 @@ export default function Admin() {
 
   // ✅ Força tab extrato antes de imprimir
   const handlePrint = () => {
-    console.log('🖨️ handlePrint chamado');
-    alert('Botão funcionou!');
     setTab('extrato');
-    setTimeout(() => window.print(), 150);
+    setTimeout(() => window.print(), 300);
   };
 
   if (loading) return (
@@ -241,13 +239,6 @@ export default function Admin() {
           <h1 className="text-5xl font-black tracking-tighter text-zinc-900 font-display print:text-2xl">PAINEL ADMIN</h1>
           <p className="text-zinc-500 font-medium print:text-xs">Extrato de agendamentos e gestão da agenda</p>
         </div>
-        <button
-          onClick={handlePrint}
-          type="button"
-          className="print:hidden flex items-center gap-2 bg-zinc-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-zinc-800 transition-all cursor-pointer select-none"
-        >
-          <Printer className="w-4 h-4" /> Imprimir Extrato
-        </button>
       </div>
 
       {/* Cards resumo */}
@@ -266,14 +257,31 @@ export default function Admin() {
         ))}
       </div>
 
+      {/* Botão imprimir — abaixo dos cards, longe do header */}
+      <div className="print:hidden">
+        <button
+          onClick={handlePrint}
+          type="button"
+          className="flex items-center gap-2 bg-zinc-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-zinc-800 transition-all cursor-pointer"
+        >
+          <Printer className="w-4 h-4" /> Imprimir Extrato
+        </button>
+      </div>
+
       {/* Tabs — oculto na impressão */}
-      <div className="flex gap-2 print:hidden">
-        {(['extrato', 'calendario'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)}
-            className={`px-6 py-2.5 rounded-xl font-bold text-sm capitalize transition-all ${tab === t ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}>
-            {t === 'extrato' ? '📋 Extrato' : '📅 Calendário'}
-          </button>
-        ))}
+      <div className="flex gap-2 print:hidden" style={{ position: 'relative', zIndex: 10 }}>
+        <button
+          type="button"
+          onClick={() => setTab('extrato')}
+          className={`px-6 py-2.5 rounded-xl font-bold text-sm capitalize transition-all ${tab === 'extrato' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}>
+          📋 Extrato
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('calendario')}
+          className={`px-6 py-2.5 rounded-xl font-bold text-sm capitalize transition-all ${tab === 'calendario' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}>
+          📅 Calendário
+        </button>
       </div>
 
       {/* Tab Extrato — sempre visível na impressão */}
