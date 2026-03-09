@@ -61,6 +61,12 @@ function AdminCalendario({ agendamentos }: { agendamentos: Agendamento[] }) {
   const [bloqueados, setBloqueados] = useState<Set<string>>(new Set());
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
+  useEffect(() => {
+    api.get('/bloqueios').then(r => {
+      setBloqueados(new Set(r.data.map((b: any) => b.data)));
+    }).catch(() => {});
+  }, []);
+
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDay = new Date(year, month, 1).getDay();
   const monthName = new Date(year, month).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
@@ -71,13 +77,20 @@ function AdminCalendario({ agendamentos }: { agendamentos: Agendamento[] }) {
   const agendPorDia = (d: number) =>
     agendamentos.filter(a => a.dataHora.startsWith(toKey(d)));
 
-  const toggleBloqueio = (key: string) => {
-    setBloqueados(prev => {
-      const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
-      toast.success(next.has(key) ? 'Dia bloqueado' : 'Dia liberado');
-      return next;
-    });
+  const toggleBloqueio = async (key: string) => {
+    try {
+      if (bloqueados.has(key)) {
+        await api.delete(`/bloqueios/${key}`);
+        setBloqueados(prev => { const n = new Set(prev); n.delete(key); return n; });
+        toast.success('Dia liberado!');
+      } else {
+        await api.post('/bloqueios', { data: key });
+        setBloqueados(prev => new Set(prev).add(key));
+        toast.success('Dia bloqueado!');
+      }
+    } catch {
+      toast.error('Erro ao alterar bloqueio');
+    }
   };
 
   const prevMonth = () => { if (month === 0) { setMonth(11); setYear(y => y - 1); } else setMonth(m => m - 1); };

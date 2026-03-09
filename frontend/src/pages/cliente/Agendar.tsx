@@ -67,7 +67,12 @@ export default function Agendar() {
             servicoId: selectedServico.id,
           },
         });
-        setHorariosDisponiveis(res.data.horariosDisponiveis || []);
+        if (res.data.bloqueado) {
+          toast.error('Este dia está bloqueado para agendamentos.');
+          setHorariosDisponiveis([]);
+        } else {
+          setHorariosDisponiveis(res.data.horariosDisponiveis || []);
+        }
       } catch {
         toast.error('Erro ao buscar horários');
         setHorariosDisponiveis([]);
