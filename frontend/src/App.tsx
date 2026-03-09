@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './store/authStore';
-import { Scissors, Calendar, Clock, MapPin, Phone, Instagram, Facebook, ChevronRight, Star } from 'lucide-react';
+import { Scissors, Calendar, Clock, MapPin, Phone, Instagram, Facebook, ChevronRight, Star, ShieldCheck } from 'lucide-react';
 import { motion } from 'motion/react';
 import Admin from './pages/admin/Admin';
 import Agendar from './pages/cliente/Agendar';
@@ -15,6 +15,14 @@ const IMGS = {
   hero:  'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&q=80',
   shop1: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=400&q=80',
   shop2: 'https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=400&q=80',
+};
+
+// ─── Rota protegida para Admin ───────────────────────────────────────────────
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuthStore();
+  if (!user) return <Navigate to="/login" />;
+  if (user.papel !== 'ADMIN') return <Navigate to="/" />;
+  return <>{children}</>;
 };
 
 // ─── Layout ──────────────────────────────────────────────────────────────────
@@ -36,6 +44,18 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
             <Link to="/" className="text-sm font-semibold text-zinc-600 hover:text-zinc-900 transition-colors">Início</Link>
             <a href="/#servicos" className="text-sm font-semibold text-zinc-600 hover:text-zinc-900 transition-colors">Serviços</a>
             <Link to="/sobre" className="text-sm font-semibold text-zinc-600 hover:text-zinc-900 transition-colors">Sobre</Link>
+
+            {/* ✅ Link Admin — visível só para ADMIN */}
+            {user?.papel === 'ADMIN' && (
+              <Link
+                to="/admin"
+                className="flex items-center gap-2 text-sm font-bold text-amber-700 bg-amber-50 border border-amber-200 px-4 py-2 rounded-xl hover:bg-amber-100 transition-all"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                Admin
+              </Link>
+            )}
+
             <Link to="/agendar" className="bg-zinc-900 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-zinc-800 transition-all shadow-lg shadow-zinc-900/10 active:scale-95">
               Agendar Agora
             </Link>
@@ -44,6 +64,12 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
           <div className="flex items-center gap-4">
             {user ? (
               <div className="flex items-center gap-3">
+                {/* Link Admin no mobile */}
+                {user.papel === 'ADMIN' && (
+                  <Link to="/admin" className="md:hidden flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg">
+                    <ShieldCheck className="w-3 h-3" /> Admin
+                  </Link>
+                )}
                 <Link to="/perfil" className="hidden md:flex items-center gap-2 text-sm font-bold text-zinc-900 hover:underline">
                   {user.fotoUrl
                     ? <img src={user.fotoUrl} className="w-7 h-7 rounded-full object-cover" alt={user.nome} />
@@ -281,10 +307,16 @@ export default function App() {
         <Route path="/"        element={<MainLayout><Home /></MainLayout>} />
         <Route path="/agendar" element={<MainLayout><Agendar /></MainLayout>} />
         <Route path="/perfil"  element={<MainLayout><Perfil /></MainLayout>} />
-        <Route path="/admin" element={<MainLayout><Admin /></MainLayout>} />
         <Route path="/login"   element={<Login />} />
-        <Route path="*"        element={<Navigate to="/" />} />
-        
+
+        {/* ✅ Rota Admin protegida */}
+        <Route path="/admin" element={
+          <AdminRoute>
+            <MainLayout><Admin /></MainLayout>
+          </AdminRoute>
+        } />
+
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );
