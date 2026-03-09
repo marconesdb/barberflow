@@ -43,37 +43,37 @@
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
+
+
+
 @media print {
-  /* Oculta elementos de UI */
-  header, footer, nav, .print\:hidden {
+  /* Oculta só o que realmente não deve imprimir */
+  header,
+  footer,
+  nav {
     display: none !important;
   }
 
-  /* Página A4 paisagem para caber a tabela */
+  /* Mostra tudo por padrão — não oculta seletores genéricos */
+  body {
+    background: white !important;
+    font-size: 10px !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
   @page {
     size: A4 landscape;
     margin: 10mm 8mm;
   }
 
-  body {
-    background: white !important;
-    font-size: 9px !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  /* Remove padding/max-width da página */
+  /* Remove limitação de largura */
   .max-w-7xl {
     max-width: 100% !important;
     padding: 0 !important;
   }
 
-  /* Mostra apenas o extrato na impressão */
-  [class*="space-y-10"] > *:not(.print-show) {
-    display: none !important;
-  }
-
-  /* Tabela compacta */
+  /* Tabela ocupa toda a largura */
   table {
     width: 100% !important;
     border-collapse: collapse !important;
@@ -88,17 +88,12 @@
   }
 
   thead {
-    background: #18181b !important;
+    background-color: #18181b !important;
     color: white !important;
   }
 
-  /* Cards resumo lado a lado */
-  .grid {
-    display: grid !important;
-  }
-
-  /* Rodapé visível */
-  .hidden.print\:block {
+  /* Rodapé de impressão visível */
+  .print-footer {
     display: block !important;
   }
 }
