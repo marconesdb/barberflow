@@ -44,6 +44,61 @@
   animation: float 6s ease-in-out infinite;
 }
 @media print {
-  header, footer, nav, .print\:hidden { display: none !important; }
-  body { background: white; }
+  /* Oculta elementos de UI */
+  header, footer, nav, .print\:hidden {
+    display: none !important;
+  }
+
+  /* Página A4 paisagem para caber a tabela */
+  @page {
+    size: A4 landscape;
+    margin: 10mm 8mm;
+  }
+
+  body {
+    background: white !important;
+    font-size: 9px !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Remove padding/max-width da página */
+  .max-w-7xl {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* Mostra apenas o extrato na impressão */
+  [class*="space-y-10"] > *:not(.print-show) {
+    display: none !important;
+  }
+
+  /* Tabela compacta */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 8px !important;
+  }
+
+  th, td {
+    padding: 3px 5px !important;
+    border: 1px solid #e5e7eb !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+
+  thead {
+    background: #18181b !important;
+    color: white !important;
+  }
+
+  /* Cards resumo lado a lado */
+  .grid {
+    display: grid !important;
+  }
+
+  /* Rodapé visível */
+  .hidden.print\:block {
+    display: block !important;
+  }
 }
