@@ -47,19 +47,24 @@
 
 
 @media print {
-  /* Oculta só o que realmente não deve imprimir */
-  header,
-  footer,
-  nav {
-    display: none !important;
+  /* Oculta TUDO por padrão */
+  body * {
+    visibility: hidden;
   }
 
-  /* Mostra tudo por padrão — não oculta seletores genéricos */
-  body {
-    background: white !important;
-    font-size: 10px !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+  /* Mostra APENAS a tabela de agendamentos e seu conteúdo */
+  #print-area,
+  #print-area * {
+    visibility: visible;
+  }
+
+  /* Posiciona o print-area no topo da página */
+  #print-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 10mm;
   }
 
   @page {
@@ -67,13 +72,12 @@
     margin: 10mm 8mm;
   }
 
-  /* Remove limitação de largura */
-  .max-w-7xl {
-    max-width: 100% !important;
-    padding: 0 !important;
+  body {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
-  /* Tabela ocupa toda a largura */
   table {
     width: 100% !important;
     border-collapse: collapse !important;
@@ -91,9 +95,5 @@
     background-color: #18181b !important;
     color: white !important;
   }
-
-  /* Rodapé de impressão visível */
-  .print-footer {
-    display: block !important;
-  }
 }
+
