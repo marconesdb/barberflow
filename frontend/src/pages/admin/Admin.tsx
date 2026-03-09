@@ -220,6 +220,8 @@ export default function Admin() {
 
   // ✅ Força tab extrato antes de imprimir
   const handlePrint = () => {
+    console.log('🖨️ handlePrint chamado');
+    alert('Botão funcionou!');
     setTab('extrato');
     setTimeout(() => window.print(), 150);
   };
