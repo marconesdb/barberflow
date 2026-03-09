@@ -234,13 +234,16 @@ export default function Admin() {
     <div className="max-w-7xl mx-auto px-6 py-12 space-y-10 print:max-w-full print:px-0 print:py-4 print:space-y-4">
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
         <div>
           <h1 className="text-5xl font-black tracking-tighter text-zinc-900 font-display print:text-2xl">PAINEL ADMIN</h1>
           <p className="text-zinc-500 font-medium print:text-xs">Extrato de agendamentos e gestão da agenda</p>
         </div>
-        <button onClick={handlePrint}
-          className="print:hidden flex items-center gap-2 bg-zinc-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-zinc-800 transition-all">
+        <button
+          onClick={handlePrint}
+          type="button"
+          className="print:hidden flex items-center gap-2 bg-zinc-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-zinc-800 transition-all cursor-pointer select-none"
+        >
           <Printer className="w-4 h-4" /> Imprimir Extrato
         </button>
       </div>
