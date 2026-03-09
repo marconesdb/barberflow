@@ -313,19 +313,21 @@ export default function Admin() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setTab('extrato')}
+        <div className="flex gap-2" style={{ position: 'relative', zIndex: 50 }}>
+          <a
+            href="#extrato"
+            onClick={e => { e.preventDefault(); setTab('extrato'); }}
+            style={{ cursor: 'pointer', userSelect: 'none' }}
             className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${tab === 'extrato' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}>
             📋 Extrato
-          </button>
-          <button
-            type="button"
-            onClick={() => setTab('calendario')}
+          </a>
+          <a
+            href="#calendario"
+            onClick={e => { e.preventDefault(); setTab('calendario'); }}
+            style={{ cursor: 'pointer', userSelect: 'none' }}
             className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${tab === 'calendario' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}>
             📅 Calendário
-          </button>
+          </a>
         </div>
 
         {/* Tab Extrato */}
