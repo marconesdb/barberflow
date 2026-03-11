@@ -109,7 +109,16 @@ export default function Agendar() {
     }
   };
 
-  const handlePrint = () => window.print();
+  const handlePrint = () => {
+    const el = document.getElementById('print-comprovante');
+    if (el) el.style.display = 'block';
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => {
+        if (el) el.style.display = 'none';
+      }, 500);
+    }, 300);
+  };
 
   const formatDate = (d: string) => {
     if (!d) return '';
@@ -126,7 +135,70 @@ export default function Agendar() {
   );
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12">
+    <>
+      {/* ─── Área de impressão do comprovante ─── */}
+      <div id="print-comprovante" style={{ display: 'none', padding: '20mm', fontFamily: 'sans-serif' }}>
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 900, margin: 0 }}>BARBERFLOW</h1>
+          <p style={{ fontSize: 11, color: '#71717a', margin: '4px 0' }}>Comprovante de Agendamento</p>
+          <div style={{ display: 'inline-block', background: '#18181b', color: 'white', padding: '6px 16px', borderRadius: 99, fontSize: 11, fontWeight: 700, marginTop: 8 }}>
+            PROTOCOLO: {protocolo}
+          </div>
+          <p style={{ fontSize: 10, color: '#a1a1aa', marginTop: 6 }}>Emitido em {new Date().toLocaleString('pt-BR')}</p>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+          {/* Dados do Cliente */}
+          <div>
+            <p style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', color: '#a1a1aa', letterSpacing: 2, marginBottom: 8 }}>Dados do Cliente</p>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10 }}>
+              <tbody>
+                {[
+                  { label: 'Nome', value: user?.nome || '—' },
+                  { label: 'E-mail', value: user?.email || '—' },
+                  { label: 'Telefone', value: (user as any)?.telefone || '—' },
+                  { label: 'Endereço', value: (user as any)?.endereco || '—' },
+                ].map(({ label, value }) => (
+                  <tr key={label} style={{ borderBottom: '1px solid #f4f4f5' }}>
+                    <td style={{ padding: '5px 4px', color: '#71717a' }}>{label}</td>
+                    <td style={{ padding: '5px 4px', fontWeight: 700, wordBreak: 'break-all' }}>{value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Detalhes do Agendamento */}
+          <div>
+            <p style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', color: '#a1a1aa', letterSpacing: 2, marginBottom: 8 }}>Detalhes do Agendamento</p>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10 }}>
+              <tbody>
+                {[
+                  { label: 'Serviço', value: selectedServico?.nome },
+                  { label: 'Duração', value: `${selectedServico?.duracaoMinutos} minutos` },
+                  { label: 'Profissional', value: selectedBarbeiro?.usuario.nome },
+                  { label: 'Data', value: formatDate(selectedDate) },
+                  { label: 'Horário', value: selectedTime },
+                  { label: 'Valor', value: `R$ ${selectedServico?.preco.toFixed(2)}` },
+                  { label: 'Status', value: 'Confirmado' },
+                ].map(({ label, value }) => (
+                  <tr key={label} style={{ borderBottom: '1px solid #f4f4f5' }}>
+                    <td style={{ padding: '5px 4px', color: '#71717a' }}>{label}</td>
+                    <td style={{ padding: '5px 4px', fontWeight: 700 }}>{value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div style={{ marginTop: 32, textAlign: 'center', fontSize: 9, color: '#a1a1aa', borderTop: '1px solid #e5e7eb', paddingTop: 12 }}>
+          <p style={{ fontWeight: 700, color: '#52525b' }}>BarberFlow — Av. Paulista, 1000 · São Paulo/SP</p>
+          <p>(11) 99999-9999 · contato@barberflow.com.br · Seg a Sáb: 09h às 20h</p>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-6 py-12">
       <div className="flex flex-col md:flex-row gap-12">
 
         {/* Sidebar */}
@@ -345,5 +417,6 @@ export default function Agendar() {
         </div>
       </div>
     </div>
+    </>
   );
 }

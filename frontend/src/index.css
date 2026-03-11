@@ -45,31 +45,37 @@
 }
 
 
-
 @media print {
-  /* Oculta TUDO por padrão */
+  /* Oculta tudo por padrão */
   body * {
     visibility: hidden;
   }
 
-  /* Mostra APENAS a tabela de agendamentos e seu conteúdo */
+  /* Mostra apenas a área de impressão ativa */
   #print-area,
-  #print-area * {
+  #print-area *,
+  #print-comprovante,
+  #print-comprovante * {
     visibility: visible;
   }
 
-  /* Posiciona o print-area no topo da página */
-  #print-area {
+  /* Posiciona no topo da folha */
+  #print-area,
+  #print-comprovante {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
+  }
+
+  /* Extrato admin — paisagem */
+  #print-area {
     padding: 10mm;
   }
 
-  @page {
-    size: A4 landscape;
-    margin: 10mm 8mm;
+  /* Comprovante — retrato */
+  #print-comprovante {
+    padding: 20mm;
   }
 
   body {
@@ -78,22 +84,40 @@
     print-color-adjust: exact;
   }
 
-  table {
+  /* Extrato admin */
+  #print-area table {
     width: 100% !important;
     border-collapse: collapse !important;
     font-size: 8px !important;
   }
 
-  th, td {
+  #print-area th,
+  #print-area td {
     padding: 3px 5px !important;
     border: 1px solid #e5e7eb !important;
     white-space: normal !important;
     word-break: break-word !important;
   }
 
-  thead {
+  #print-area thead {
     background-color: #18181b !important;
     color: white !important;
   }
-}
 
+  /* Comprovante */
+  #print-comprovante table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 10px !important;
+  }
+
+  #print-comprovante td {
+    padding: 5px 4px !important;
+    border-bottom: 1px solid #f4f4f5 !important;
+    word-break: break-all !important;
+  }
+
+  @page {
+    margin: 0;
+  }
+}
