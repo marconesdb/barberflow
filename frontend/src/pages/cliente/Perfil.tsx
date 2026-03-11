@@ -59,20 +59,20 @@ function ModalCompletarPerfil({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-[40px] p-10 max-w-md w-full space-y-6 shadow-2xl"
+        className="bg-white rounded-[32px] p-6 max-w-md w-full space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto"
       >
         {/* Ícone + título */}
         <div className="text-center space-y-3">
-          <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
-            <User className="w-8 h-8 text-amber-500" />
+          <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
+            <User className="w-6 h-6 text-amber-500" />
           </div>
-          <h3 className="text-2xl font-black text-zinc-900">Complete seu perfil</h3>
+          <h3 className="text-xl font-black text-zinc-900">Complete seu perfil</h3>
           <p className="text-zinc-500 text-sm leading-relaxed">
-            Para continuar precisamos que você preencha seus dados completos. Isso garante uma experiência melhor no agendamento.
+            Para continuar precisamos que você preencha seus dados completos.
           </p>
         </div>
 
