@@ -104,14 +104,33 @@ function ModalCompletarPerfil({
               className="w-full px-4 py-3 rounded-2xl border-2 border-zinc-100 focus:outline-none focus:border-zinc-900 font-medium text-sm"
             />
           </div>
-          <div className="space-y-1">
+          <div className="space-y-2">
             <label className="text-xs font-black text-zinc-400 uppercase tracking-widest">Endereço *</label>
-            <input
-              value={dados.endereco}
-              onChange={e => setDados(d => ({ ...d, endereco: e.target.value }))}
-              placeholder="Rua, número, bairro, cidade"
-              className="w-full px-4 py-3 rounded-2xl border-2 border-zinc-100 focus:outline-none focus:border-zinc-900 font-medium text-sm"
-            />
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { key: 'rua',     placeholder: 'Rua / Av.',  col: 'col-span-2' },
+                { key: 'numero',  placeholder: 'Número',     col: '' },
+                { key: 'bairro',  placeholder: 'Bairro',     col: '' },
+                { key: 'cidade',  placeholder: 'Cidade',     col: 'col-span-2' },
+              ].map(({ key, placeholder, col }) => {
+                const partes = dados.endereco.split('|');
+                const idx = ['rua','numero','bairro','cidade'].indexOf(key);
+                return (
+                  <input
+                    key={key}
+                    value={partes[idx] || ''}
+                    onChange={e => {
+                      const arr = dados.endereco.split('|');
+                      while (arr.length < 4) arr.push('');
+                      arr[idx] = e.target.value;
+                      setDados(d => ({ ...d, endereco: arr.join('|') }));
+                    }}
+                    placeholder={placeholder}
+                    className={`${col} px-4 py-3 rounded-2xl border-2 border-zinc-100 focus:outline-none focus:border-zinc-900 font-medium text-sm`}
+                  />
+                );
+              })}
+            </div>
           </div>
         </div>
 
