@@ -363,10 +363,9 @@ export default function Agendar() {
                         { label: 'WhatsApp', value: (user as any)?.whatsapp || (user as any)?.telefone || '—' },
                         { label: 'Endereço', value: (user as any)?.endereco || '—' },
                       ].map(({ label, value }) => (
-                        // ✅ gap-4 + shrink-0 no label + break-all no valor
-                        <div key={label} className="flex justify-between gap-4 text-sm border-b border-zinc-100 pb-2 last:border-0 last:pb-0">
-                          <span className="text-zinc-500 font-medium shrink-0">{label}</span>
-                          <span className="font-bold text-zinc-900 text-right break-all">{value}</span>
+                        <div key={label} className="flex flex-col text-sm border-b border-zinc-100 pb-2 last:border-0 last:pb-0">
+                          <span className="text-zinc-500 font-medium">{label}</span>
+                          <span className="font-bold text-zinc-900 break-all">{value}</span>
                         </div>
                       ))}
                     </div>
