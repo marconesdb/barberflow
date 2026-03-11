@@ -53,7 +53,6 @@ export default function Agendar() {
     fetchData();
   }, []);
 
-  // Busca horários disponíveis quando barbeiro, data e serviço estão selecionados
   useEffect(() => {
     if (!selectedBarbeiro || !selectedDate || !selectedServico) return;
     const fetchHorarios = async () => {
@@ -88,13 +87,11 @@ export default function Agendar() {
       toast.error('Preencha todos os campos');
       return;
     }
-
     if (!user) {
       toast.error('Você precisa estar logado para agendar');
       window.location.href = '/login';
       return;
     }
-
     const loadingToast = toast.loading('Processando seu agendamento...');
     try {
       const dataHora = new Date(`${selectedDate}T${selectedTime}:00`).toISOString();
@@ -131,6 +128,7 @@ export default function Agendar() {
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
       <div className="flex flex-col md:flex-row gap-12">
+
         {/* Sidebar */}
         <div className="md:w-1/3 space-y-8">
           <div className="space-y-2">
@@ -173,6 +171,7 @@ export default function Agendar() {
         <div className="flex-1 min-h-[500px]">
           <AnimatePresence mode="wait">
 
+            {/* Step 1 — Serviço */}
             {step === 1 && (
               <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                 <div className="grid gap-4">
@@ -196,6 +195,7 @@ export default function Agendar() {
               </motion.div>
             )}
 
+            {/* Step 2 — Barbeiro */}
             {step === 2 && (
               <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                 <div className="grid grid-cols-2 gap-6">
@@ -215,6 +215,7 @@ export default function Agendar() {
               </motion.div>
             )}
 
+            {/* Step 3 — Data e Hora */}
             {step === 3 && (
               <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
                 <div className="space-y-6">
@@ -228,9 +229,7 @@ export default function Agendar() {
 
                   {selectedDate && (
                     <div className="space-y-4">
-                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-                        Horários Disponíveis
-                      </label>
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Horários Disponíveis</label>
                       {loadingHorarios ? (
                         <div className="flex items-center gap-3 text-zinc-400 text-sm font-medium">
                           <div className="w-5 h-5 border-2 border-zinc-300 border-t-zinc-900 rounded-full animate-spin" />
@@ -262,6 +261,7 @@ export default function Agendar() {
               </motion.div>
             )}
 
+            {/* Step 4 — Comprovante */}
             {step === 4 && (
               <motion.div key="step4" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
                 className="bg-white p-10 rounded-[48px] border-2 border-zinc-100 shadow-2xl print:shadow-none print:border-none">
@@ -279,6 +279,8 @@ export default function Agendar() {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-8">
+
+                  {/* Dados do Cliente */}
                   <div className="space-y-4">
                     <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest">Dados do Cliente</h3>
                     <div className="bg-zinc-50 rounded-3xl p-6 space-y-3">
@@ -289,14 +291,16 @@ export default function Agendar() {
                         { label: 'WhatsApp', value: (user as any)?.whatsapp || (user as any)?.telefone || '—' },
                         { label: 'Endereço', value: (user as any)?.endereco || '—' },
                       ].map(({ label, value }) => (
-                        <div key={label} className="flex justify-between text-sm border-b border-zinc-100 pb-2 last:border-0 last:pb-0">
-                          <span className="text-zinc-500 font-medium">{label}</span>
-                          <span className="font-bold text-zinc-900 text-right max-w-[60%]">{value}</span>
+                        // ✅ gap-4 + shrink-0 no label + break-all no valor
+                        <div key={label} className="flex justify-between gap-4 text-sm border-b border-zinc-100 pb-2 last:border-0 last:pb-0">
+                          <span className="text-zinc-500 font-medium shrink-0">{label}</span>
+                          <span className="font-bold text-zinc-900 text-right break-all">{value}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
+                  {/* Detalhes do Agendamento */}
                   <div className="space-y-4">
                     <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest">Detalhes do Agendamento</h3>
                     <div className="bg-zinc-50 rounded-3xl p-6 space-y-3">
@@ -316,6 +320,7 @@ export default function Agendar() {
                       ))}
                     </div>
                   </div>
+
                 </div>
 
                 <div className="mt-8 p-4 bg-zinc-50 rounded-2xl text-center text-xs text-zinc-400 space-y-1">
@@ -332,6 +337,7 @@ export default function Agendar() {
                     Voltar para o Início
                   </Button>
                 </div>
+
               </motion.div>
             )}
 
