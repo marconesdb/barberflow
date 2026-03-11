@@ -325,9 +325,20 @@ export default function Agendar() {
                 </div>
                 <div className="pt-8 flex gap-4">
                   <Button variant="outline" className="flex-1 py-6" onClick={() => setStep(2)}>Voltar</Button>
-                  <Button className="flex-[2] py-6 text-lg" onClick={handleAgendar} disabled={!selectedDate || !selectedTime || loadingHorarios}>
-                    Finalizar Reserva
-                  </Button>
+                  {(user as any)?.telefone?.trim() && (user as any)?.endereco?.trim() ? (
+                    <Button className="flex-[2] py-6 text-lg" onClick={handleAgendar} disabled={!selectedDate || !selectedTime || loadingHorarios}>
+                      Finalizar Reserva
+                    </Button>
+                  ) : (
+                    <div className="flex-[2] space-y-2">
+                      <div className="w-full py-4 px-6 rounded-2xl bg-amber-50 border-2 border-amber-200 text-amber-700 text-sm font-bold text-center">
+                        ⚠ Complete seu perfil para finalizar
+                      </div>
+                      <Button className="w-full py-4 bg-amber-500 hover:bg-amber-600" onClick={() => window.location.href = '/perfil'}>
+                        Ir para Meus Dados
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}
