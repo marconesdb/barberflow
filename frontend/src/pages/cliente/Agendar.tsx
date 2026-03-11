@@ -111,13 +111,14 @@ export default function Agendar() {
 
   const handlePrint = () => {
     const el = document.getElementById('print-comprovante');
-    if (el) el.style.display = 'block';
-    setTimeout(() => {
-      window.print();
-      setTimeout(() => {
-        if (el) el.style.display = 'none';
-      }, 500);
-    }, 300);
+    if (!el) return;
+    el.style.display = 'block';
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.print();
+        el.style.display = 'none';
+      });
+    });
   };
 
   const formatDate = (d: string) => {

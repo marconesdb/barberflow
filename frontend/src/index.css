@@ -44,7 +44,6 @@
   animation: float 6s ease-in-out infinite;
 }
 
-
 @media print {
   /* Oculta tudo por padrão */
   body * {
@@ -118,6 +117,7 @@
   }
 
   @page {
+    size: A4;
     margin: 0;
   }
 }
