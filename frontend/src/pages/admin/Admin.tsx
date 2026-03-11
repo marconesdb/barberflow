@@ -275,11 +275,7 @@ export default function Admin() {
   );
 
   return (
-    <>
-      {/* Área de impressão — sempre no DOM, oculta por default */}
-      <PrintArea filtrados={filtrados} totalReceita={totalReceita} />
-
-      <div className="max-w-7xl mx-auto px-6 py-12 space-y-10">
+    <div className="max-w-7xl mx-auto px-6 py-12 space-y-10">
 
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -406,6 +402,5 @@ export default function Admin() {
         )}
 
       </div>
-    </>
   );
 }
