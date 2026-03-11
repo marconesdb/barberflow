@@ -177,56 +177,6 @@ function AdminCalendario({ agendamentos }: { agendamentos: Agendamento[] }) {
   );
 }
 
-// ─── Área de impressão (fora do fluxo principal) ──────────────────────────────
-function PrintArea({ filtrados, totalReceita }: { filtrados: Agendamento[], totalReceita: number }) {
-  return (
-    <div id="print-area" style={{ display: 'none' }}>
-      <h1 style={{ fontSize: 18, fontWeight: 900, marginBottom: 4 }}>BarberFlow — Extrato de Agendamentos</h1>
-      <p style={{ fontSize: 10, color: '#71717a', marginBottom: 16 }}>Gerado em {new Date().toLocaleString('pt-BR')}</p>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 9 }}>
-        <thead>
-          <tr style={{ background: '#18181b', color: 'white' }}>
-            {['Protocolo','Data/Hora','Cliente','Contato','Endereço','Serviço','Barbeiro','Valor','Status'].map(h => (
-              <th key={h} style={{ padding: '6px 8px', textAlign: 'left', fontSize: 8, textTransform: 'uppercase' }}>{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {filtrados.map((a, i) => (
-            <tr key={a.id} style={{ background: i % 2 === 0 ? 'white' : '#fafafa' }}>
-              <td style={{ padding: '5px 8px', fontFamily: 'monospace', fontSize: 8 }}>{a.codigoControle}</td>
-              <td style={{ padding: '5px 8px', fontSize: 8 }}>
-                {new Date(a.dataHora).toLocaleDateString('pt-BR')} {new Date(a.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-              </td>
-              <td style={{ padding: '5px 8px', fontWeight: 700 }}>{a.cliente.nome}</td>
-              <td style={{ padding: '5px 8px', fontSize: 8 }}>{a.cliente.email}<br />{a.cliente.telefone || '—'}</td>
-              <td style={{ padding: '5px 8px', fontSize: 8 }}>{a.cliente.endereco || '—'}</td>
-              <td style={{ padding: '5px 8px' }}>{a.servico.nome} <span style={{ color: '#a1a1aa' }}>{a.servico.duracaoMinutos}min</span></td>
-              <td style={{ padding: '5px 8px' }}>{a.barbeiro.usuario.nome}</td>
-              <td style={{ padding: '5px 8px', fontWeight: 700 }}>R$ {a.servico.preco.toFixed(2)}</td>
-              <td style={{ padding: '5px 8px' }}>{a.status}</td>
-            </tr>
-          ))}
-        </tbody>
-        <tfoot>
-          <tr style={{ borderTop: '2px solid #e5e7eb', background: '#fafafa' }}>
-            <td colSpan={7} style={{ padding: '6px 8px', fontWeight: 900, fontSize: 9, textTransform: 'uppercase' }}>
-              Total ({filtrados.filter(a => a.status !== 'CANCELADO').length} agendamentos)
-            </td>
-            <td style={{ padding: '6px 8px', fontWeight: 900 }}>R$ {totalReceita.toFixed(2)}</td>
-            <td />
-          </tr>
-        </tfoot>
-      </table>
-      <div style={{ marginTop: 24, textAlign: 'center', fontSize: 9, color: '#71717a', borderTop: '1px solid #e5e7eb', paddingTop: 12 }}>
-        <p style={{ fontWeight: 700, color: '#18181b' }}>BarberFlow — Extrato de Agendamentos</p>
-        <p>Gerado em {new Date().toLocaleString('pt-BR')}</p>
-        <p>Av. Paulista, 1000 · São Paulo/SP · (11) 99999-9999</p>
-      </div>
-    </div>
-  );
-}
-
 // ─── Admin Principal ──────────────────────────────────────────────────────────
 export default function Admin() {
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
@@ -256,16 +206,74 @@ export default function Admin() {
     .filter(a => a.status !== 'CANCELADO')
     .reduce((acc, a) => acc + a.servico.preco, 0);
 
-  // ✅ Mostra #print-area, imprime, depois esconde
+  // ─── Imprime em nova janela limpa ─────────────────────────────────────────
   const handlePrint = () => {
-    const el = document.getElementById('print-area');
-    if (el) el.style.display = 'block';
-    setTimeout(() => {
-      window.print();
-      setTimeout(() => {
-        if (el) el.style.display = 'none';
-      }, 500);
-    }, 300);
+    const linhas = filtrados.map((a, i) => `
+      <tr style="background:${i % 2 === 0 ? '#fff' : '#fafafa'}">
+        <td style="font-family:monospace">${a.codigoControle}</td>
+        <td>${new Date(a.dataHora).toLocaleDateString('pt-BR')} ${new Date(a.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
+        <td><strong>${a.cliente.nome}</strong></td>
+        <td>${a.cliente.email}<br/><small>${a.cliente.telefone || '—'}</small></td>
+        <td>${a.cliente.endereco || '—'}</td>
+        <td><strong>${a.servico.nome}</strong> <small>${a.servico.duracaoMinutos}min</small></td>
+        <td>${a.barbeiro.usuario.nome}</td>
+        <td><strong>R$ ${a.servico.preco.toFixed(2)}</strong></td>
+        <td>${a.status}</td>
+      </tr>
+    `).join('');
+
+    const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Extrato BarberFlow</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:Arial,sans-serif; padding:10mm; font-size:9px; color:#18181b; }
+    h1 { font-size:16px; font-weight:900; margin-bottom:2px; }
+    .sub { font-size:9px; color:#71717a; margin-bottom:14px; }
+    table { width:100%; border-collapse:collapse; }
+    th { background:#18181b; color:white; padding:5px 6px; text-align:left; font-size:8px; text-transform:uppercase; letter-spacing:1px; }
+    td { padding:4px 6px; border-bottom:1px solid #f4f4f5; font-size:8px; word-break:break-word; }
+    tfoot td { font-weight:900; border-top:2px solid #e5e7eb; background:#fafafa; }
+    .rodape { text-align:center; font-size:9px; color:#a1a1aa; border-top:1px solid #e5e7eb; padding-top:10px; margin-top:20px; }
+    @page { size:A4 landscape; margin:10mm 8mm; }
+  </style>
+</head>
+<body>
+  <h1>BARBERFLOW — Extrato de Agendamentos</h1>
+  <p class="sub">Gerado em ${new Date().toLocaleString('pt-BR')}</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Protocolo</th><th>Data/Hora</th><th>Cliente</th><th>Contato</th>
+        <th>Endereço</th><th>Serviço</th><th>Barbeiro</th><th>Valor</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody>${linhas}</tbody>
+    <tfoot>
+      <tr>
+        <td colspan="7">Total (${filtrados.filter(a => a.status !== 'CANCELADO').length} agendamentos)</td>
+        <td>R$ ${totalReceita.toFixed(2)}</td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+  <div class="rodape">
+    <strong>BarberFlow — Av. Paulista, 1000 · São Paulo/SP</strong><br/>
+    (11) 99999-9999 · contato@barberflow.com.br · Seg a Sáb: 09h às 20h
+  </div>
+  <script>window.onload = () => { window.print(); window.close(); }<\/script>
+</body>
+</html>`;
+
+    const janela = window.open('', '_blank', 'width=1000,height=700');
+    if (!janela) {
+      toast.error('Permita popups para imprimir');
+      return;
+    }
+    janela.document.write(html);
+    janela.document.close();
   };
 
   if (loading) return (
@@ -277,130 +285,126 @@ export default function Admin() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-12 space-y-10">
 
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-5xl font-black tracking-tighter text-zinc-900 font-display">PAINEL ADMIN</h1>
-            <p className="text-zinc-500 font-medium">Extrato de agendamentos e gestão da agenda</p>
-          </div>
-          <button
-            type="button"
-            onClick={handlePrint}
-            className="print:hidden flex items-center gap-2 bg-zinc-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-zinc-800 transition-all cursor-pointer"
-          >
-            <Printer className="w-4 h-4" /> Imprimir Extrato
-          </button>
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-5xl font-black tracking-tighter text-zinc-900 font-display">PAINEL ADMIN</h1>
+          <p className="text-zinc-500 font-medium">Extrato de agendamentos e gestão da agenda</p>
         </div>
-
-        {/* Cards resumo */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { label: 'Total', value: agendamentos.length, icon: <Scissors className="w-5 h-5" />, color: 'bg-zinc-900 text-white' },
-            { label: 'Confirmados', value: agendamentos.filter(a => a.status === 'CONFIRMADO').length, icon: <Calendar className="w-5 h-5" />, color: 'bg-green-600 text-white' },
-            { label: 'Cancelados', value: agendamentos.filter(a => a.status === 'CANCELADO').length, icon: <Users className="w-5 h-5" />, color: 'bg-red-500 text-white' },
-            { label: 'Receita', value: `R$ ${totalReceita.toFixed(2)}`, icon: <TrendingUp className="w-5 h-5" />, color: 'bg-blue-600 text-white' },
-          ].map(({ label, value, icon, color }) => (
-            <div key={label} className={`${color} p-6 rounded-3xl space-y-3`}>
-              <div className="opacity-70">{icon}</div>
-              <div className="text-2xl font-black">{value}</div>
-              <div className="text-xs font-bold uppercase tracking-widest opacity-70">{label}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Tabs */}
-        <div className="flex gap-2" style={{ position: 'relative', zIndex: 50 }}>
-          <a
-            href="#extrato"
-            onClick={e => { e.preventDefault(); setTab('extrato'); handlePrint(); }}
-            style={{ cursor: 'pointer', userSelect: 'none' }}
-            className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${tab === 'extrato' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}>
-            📋 Extrato
-          </a>
-          <a
-            href="#calendario"
-            onClick={e => { e.preventDefault(); setTab('calendario'); }}
-            style={{ cursor: 'pointer', userSelect: 'none' }}
-            className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${tab === 'calendario' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}>
-            📅 Calendário
-          </a>
-        </div>
-
-        {/* Tab Extrato */}
-        {tab === 'extrato' && (
-          <div className="space-y-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <input value={search} onChange={e => setSearch(e.target.value)}
-                placeholder="Buscar por cliente, serviço ou protocolo..."
-                className="flex-1 px-4 py-3 rounded-xl border-2 border-zinc-100 focus:outline-none focus:border-zinc-900 text-sm font-medium" />
-              <select value={filtroStatus} onChange={e => setFiltroStatus(e.target.value)}
-                className="px-4 py-3 rounded-xl border-2 border-zinc-100 focus:outline-none focus:border-zinc-900 text-sm font-bold bg-white">
-                {['TODOS','CONFIRMADO','CANCELADO','CONCLUIDO','PENDENTE'].map(s => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="overflow-x-auto rounded-3xl border border-zinc-100 shadow-sm">
-              <table className="w-full text-sm">
-                <thead className="bg-zinc-900 text-white">
-                  <tr>
-                    {['Protocolo','Data/Hora','Cliente','Contato','Endereço','Serviço','Barbeiro','Valor','Status'].map(h => (
-                      <th key={h} className="px-4 py-4 text-left text-xs font-black uppercase tracking-widest whitespace-nowrap">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100">
-                  {filtrados.length === 0 ? (
-                    <tr><td colSpan={9} className="text-center py-12 text-zinc-400 font-medium">Nenhum agendamento encontrado.</td></tr>
-                  ) : filtrados.map((a, i) => (
-                    <tr key={a.id} className={`${i % 2 === 0 ? 'bg-white' : 'bg-zinc-50'} hover:bg-zinc-100 transition-colors`}>
-                      <td className="px-4 py-4 font-mono text-xs font-bold text-zinc-500 whitespace-nowrap">{a.codigoControle}</td>
-                      <td className="px-4 py-4 whitespace-nowrap font-medium">
-                        {new Date(a.dataHora).toLocaleDateString('pt-BR')}{' '}
-                        <span className="text-zinc-400 text-xs">{new Date(a.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
-                      </td>
-                      <td className="px-4 py-4 font-bold text-zinc-900 whitespace-nowrap">{a.cliente.nome}</td>
-                      <td className="px-4 py-4 text-zinc-500 whitespace-nowrap">
-                        {a.cliente.email}<br />
-                        <span className="text-xs">{a.cliente.telefone || '—'}</span>
-                      </td>
-                      <td className="px-4 py-4 text-zinc-500 text-xs max-w-[140px]">{a.cliente.endereco || '—'}</td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <span className="font-bold text-zinc-900">{a.servico.nome}</span><br />
-                        <span className="text-xs text-zinc-400">{a.servico.duracaoMinutos}min</span>
-                      </td>
-                      <td className="px-4 py-4 font-medium whitespace-nowrap">{a.barbeiro.usuario.nome}</td>
-                      <td className="px-4 py-4 font-black text-zinc-900 whitespace-nowrap">R$ {a.servico.preco.toFixed(2)}</td>
-                      <td className="px-4 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-black whitespace-nowrap ${STATUS_COLOR[a.status] || 'bg-zinc-100 text-zinc-600'}`}>
-                          {a.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot className="bg-zinc-50 border-t-2 border-zinc-200">
-                  <tr>
-                    <td colSpan={7} className="px-4 py-4 font-black text-zinc-900 uppercase tracking-widest text-xs">
-                      Total ({filtrados.filter(a => a.status !== 'CANCELADO').length} agendamentos)
-                    </td>
-                    <td className="px-4 py-4 font-black text-zinc-900 text-base">R$ {totalReceita.toFixed(2)}</td>
-                    <td />
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Tab Calendário */}
-        {tab === 'calendario' && (
-          <div className="max-w-lg">
-            <AdminCalendario agendamentos={agendamentos} />
-          </div>
-        )}
-
+        <button
+          type="button"
+          onClick={handlePrint}
+          className="print:hidden flex items-center gap-2 bg-zinc-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-zinc-800 transition-all cursor-pointer"
+        >
+          <Printer className="w-4 h-4" /> Imprimir Extrato
+        </button>
       </div>
+
+      {/* Cards resumo */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: 'Total', value: agendamentos.length, icon: <Scissors className="w-5 h-5" />, color: 'bg-zinc-900 text-white' },
+          { label: 'Confirmados', value: agendamentos.filter(a => a.status === 'CONFIRMADO').length, icon: <Calendar className="w-5 h-5" />, color: 'bg-green-600 text-white' },
+          { label: 'Cancelados', value: agendamentos.filter(a => a.status === 'CANCELADO').length, icon: <Users className="w-5 h-5" />, color: 'bg-red-500 text-white' },
+          { label: 'Receita', value: `R$ ${totalReceita.toFixed(2)}`, icon: <TrendingUp className="w-5 h-5" />, color: 'bg-blue-600 text-white' },
+        ].map(({ label, value, icon, color }) => (
+          <div key={label} className={`${color} p-6 rounded-3xl space-y-3`}>
+            <div className="opacity-70">{icon}</div>
+            <div className="text-2xl font-black">{value}</div>
+            <div className="text-xs font-bold uppercase tracking-widest opacity-70">{label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2" style={{ position: 'relative', zIndex: 50 }}>
+        <a href="#extrato" onClick={e => { e.preventDefault(); setTab('extrato'); handlePrint(); }}
+          style={{ cursor: 'pointer', userSelect: 'none' }}
+          className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${tab === 'extrato' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}>
+          📋 Extrato
+        </a>
+        <a href="#calendario" onClick={e => { e.preventDefault(); setTab('calendario'); }}
+          style={{ cursor: 'pointer', userSelect: 'none' }}
+          className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${tab === 'calendario' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}>
+          📅 Calendário
+        </a>
+      </div>
+
+      {/* Tab Extrato */}
+      {tab === 'extrato' && (
+        <div className="space-y-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <input value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Buscar por cliente, serviço ou protocolo..."
+              className="flex-1 px-4 py-3 rounded-xl border-2 border-zinc-100 focus:outline-none focus:border-zinc-900 text-sm font-medium" />
+            <select value={filtroStatus} onChange={e => setFiltroStatus(e.target.value)}
+              className="px-4 py-3 rounded-xl border-2 border-zinc-100 focus:outline-none focus:border-zinc-900 text-sm font-bold bg-white">
+              {['TODOS','CONFIRMADO','CANCELADO','CONCLUIDO','PENDENTE'].map(s => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="overflow-x-auto rounded-3xl border border-zinc-100 shadow-sm">
+            <table className="w-full text-sm">
+              <thead className="bg-zinc-900 text-white">
+                <tr>
+                  {['Protocolo','Data/Hora','Cliente','Contato','Endereço','Serviço','Barbeiro','Valor','Status'].map(h => (
+                    <th key={h} className="px-4 py-4 text-left text-xs font-black uppercase tracking-widest whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100">
+                {filtrados.length === 0 ? (
+                  <tr><td colSpan={9} className="text-center py-12 text-zinc-400 font-medium">Nenhum agendamento encontrado.</td></tr>
+                ) : filtrados.map((a, i) => (
+                  <tr key={a.id} className={`${i % 2 === 0 ? 'bg-white' : 'bg-zinc-50'} hover:bg-zinc-100 transition-colors`}>
+                    <td className="px-4 py-4 font-mono text-xs font-bold text-zinc-500 whitespace-nowrap">{a.codigoControle}</td>
+                    <td className="px-4 py-4 whitespace-nowrap font-medium">
+                      {new Date(a.dataHora).toLocaleDateString('pt-BR')}{' '}
+                      <span className="text-zinc-400 text-xs">{new Date(a.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                    </td>
+                    <td className="px-4 py-4 font-bold text-zinc-900 whitespace-nowrap">{a.cliente.nome}</td>
+                    <td className="px-4 py-4 text-zinc-500 whitespace-nowrap">
+                      {a.cliente.email}<br />
+                      <span className="text-xs">{a.cliente.telefone || '—'}</span>
+                    </td>
+                    <td className="px-4 py-4 text-zinc-500 text-xs max-w-[140px]">{a.cliente.endereco || '—'}</td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <span className="font-bold text-zinc-900">{a.servico.nome}</span><br />
+                      <span className="text-xs text-zinc-400">{a.servico.duracaoMinutos}min</span>
+                    </td>
+                    <td className="px-4 py-4 font-medium whitespace-nowrap">{a.barbeiro.usuario.nome}</td>
+                    <td className="px-4 py-4 font-black text-zinc-900 whitespace-nowrap">R$ {a.servico.preco.toFixed(2)}</td>
+                    <td className="px-4 py-4">
+                      <span className={`px-3 py-1 rounded-full text-xs font-black whitespace-nowrap ${STATUS_COLOR[a.status] || 'bg-zinc-100 text-zinc-600'}`}>
+                        {a.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="bg-zinc-50 border-t-2 border-zinc-200">
+                <tr>
+                  <td colSpan={7} className="px-4 py-4 font-black text-zinc-900 uppercase tracking-widest text-xs">
+                    Total ({filtrados.filter(a => a.status !== 'CANCELADO').length} agendamentos)
+                  </td>
+                  <td className="px-4 py-4 font-black text-zinc-900 text-base">R$ {totalReceita.toFixed(2)}</td>
+                  <td />
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Tab Calendário */}
+      {tab === 'calendario' && (
+        <div className="max-w-lg">
+          <AdminCalendario agendamentos={agendamentos} />
+        </div>
+      )}
+
+    </div>
   );
 }
