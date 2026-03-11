@@ -316,7 +316,7 @@ export default function Admin() {
         <div className="flex gap-2" style={{ position: 'relative', zIndex: 50 }}>
           <a
             href="#extrato"
-            onClick={e => { e.preventDefault(); setTab('extrato'); }}
+            onClick={e => { e.preventDefault(); setTab('extrato'); handlePrint(); }}
             style={{ cursor: 'pointer', userSelect: 'none' }}
             className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${tab === 'extrato' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}>
             📋 Extrato
