@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Printer, Calendar, Users, Scissors, TrendingUp, Lock, Unlock, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import jsPDF from 'jspdf';
+// jspdf v4.x — import correto
+import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import api from '../../services/api';
 
@@ -179,6 +180,76 @@ function AdminCalendario({ agendamentos }: { agendamentos: Agendamento[] }) {
   );
 }
 
+// ─── Geração do PDF — recebe filtrados e total direto como parâmetro ──────────
+function gerarPDF(filtrados: Agendamento[], totalReceita: number) {
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+  // Cabeçalho
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text('BARBERFLOW — Extrato de Agendamentos', 10, 14);
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(120, 120, 120);
+  doc.text(`Gerado em ${new Date().toLocaleString('pt-BR')}`, 10, 20);
+  doc.setTextColor(0, 0, 0);
+
+  // Tabela
+  autoTable(doc, {
+    startY: 25,
+    head: [['Protocolo', 'Data/Hora', 'Cliente', 'Contato', 'Endereço', 'Serviço', 'Barbeiro', 'Valor', 'Status']],
+    body: filtrados.map(a => [
+      a.codigoControle,
+      `${new Date(a.dataHora).toLocaleDateString('pt-BR')} ${new Date(a.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`,
+      a.cliente.nome,
+      `${a.cliente.email}\n${a.cliente.telefone || '—'}`,
+      a.cliente.endereco || '—',
+      `${a.servico.nome} (${a.servico.duracaoMinutos}min)`,
+      a.barbeiro.usuario.nome,
+      `R$ ${a.servico.preco.toFixed(2)}`,
+      a.status,
+    ]),
+    foot: [[
+      { content: `Total (${filtrados.filter(a => a.status !== 'CANCELADO').length} agendamentos)`, colSpan: 7, styles: { fontStyle: 'bold' } },
+      { content: `R$ ${totalReceita.toFixed(2)}`, styles: { fontStyle: 'bold' } },
+      '',
+    ]],
+    styles: { fontSize: 7, cellPadding: 2, overflow: 'linebreak' },
+    headStyles: { fillColor: [24, 24, 27], textColor: 255, fontStyle: 'bold', fontSize: 7 },
+    footStyles: { fillColor: [250, 250, 250], textColor: [24, 24, 27] },
+    alternateRowStyles: { fillColor: [250, 250, 250] },
+    columnStyles: {
+      0: { cellWidth: 38 },
+      1: { cellWidth: 22 },
+      2: { cellWidth: 32 },
+      3: { cellWidth: 40 },
+      4: { cellWidth: 30 },
+      5: { cellWidth: 38 },
+      6: { cellWidth: 26 },
+      7: { cellWidth: 18 },
+      8: { cellWidth: 20 },
+    },
+    margin: { left: 10, right: 10 },
+  });
+
+  // Rodapé em cada página
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    const y = doc.internal.pageSize.getHeight() - 6;
+    doc.setFontSize(7);
+    doc.setTextColor(160, 160, 160);
+    doc.text(
+      'BarberFlow — Av. Paulista, 1000 · São Paulo/SP · (11) 99999-9999 · contato@barberflow.com.br · Seg a Sáb: 09h às 20h',
+      10, y
+    );
+    doc.text(`Página ${i} de ${pageCount}`, doc.internal.pageSize.getWidth() - 10, y, { align: 'right' });
+  }
+
+  doc.save(`extrato-barberflow-${new Date().toISOString().slice(0, 10)}.pdf`);
+}
+
 // ─── Admin Principal ──────────────────────────────────────────────────────────
 export default function Admin() {
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
@@ -208,78 +279,15 @@ export default function Admin() {
     .filter(a => a.status !== 'CANCELADO')
     .reduce((acc, a) => acc + a.servico.preco, 0);
 
-  // ─── Gera PDF real A4 landscape com jsPDF ────────────────────────────────
-  const handlePrint = () => {
-    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  // Passa filtrados e totalReceita direto — sem depender de estado assíncrono
+  const handlePrint = useCallback(() => {
+    gerarPDF(filtrados, totalReceita);
+  }, [filtrados, totalReceita]);
 
-    // Cabeçalho
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('BARBERFLOW — Extrato de Agendamentos', 10, 14);
-
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(120, 120, 120);
-    doc.text(`Gerado em ${new Date().toLocaleString('pt-BR')}`, 10, 20);
-    doc.setTextColor(0, 0, 0);
-
-    // Tabela
-    autoTable(doc, {
-      startY: 25,
-      head: [['Protocolo', 'Data/Hora', 'Cliente', 'Contato', 'Endereço', 'Serviço', 'Barbeiro', 'Valor', 'Status']],
-      body: filtrados.map(a => [
-        a.codigoControle,
-        `${new Date(a.dataHora).toLocaleDateString('pt-BR')} ${new Date(a.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`,
-        a.cliente.nome,
-        `${a.cliente.email}\n${a.cliente.telefone || '—'}`,
-        a.cliente.endereco || '—',
-        `${a.servico.nome} (${a.servico.duracaoMinutos}min)`,
-        a.barbeiro.usuario.nome,
-        `R$ ${a.servico.preco.toFixed(2)}`,
-        a.status,
-      ]),
-      foot: [[
-        { content: `Total (${filtrados.filter(a => a.status !== 'CANCELADO').length} agendamentos)`, colSpan: 7, styles: { fontStyle: 'bold' } },
-        { content: `R$ ${totalReceita.toFixed(2)}`, styles: { fontStyle: 'bold' } },
-        '',
-      ]],
-      styles: { fontSize: 7, cellPadding: 2, overflow: 'linebreak' },
-      headStyles: { fillColor: [24, 24, 27], textColor: 255, fontStyle: 'bold', fontSize: 7 },
-      footStyles: { fillColor: [250, 250, 250], textColor: [24, 24, 27] },
-      alternateRowStyles: { fillColor: [250, 250, 250] },
-      columnStyles: {
-        0: { cellWidth: 38 },
-        1: { cellWidth: 22 },
-        2: { cellWidth: 32 },
-        3: { cellWidth: 40 },
-        4: { cellWidth: 30 },
-        5: { cellWidth: 38 },
-        6: { cellWidth: 26 },
-        7: { cellWidth: 18 },
-        8: { cellWidth: 20 },
-      },
-      margin: { left: 10, right: 10 },
-    });
-
-    // Rodapé
-    const pageCount = doc.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      const y = doc.internal.pageSize.getHeight() - 6;
-      doc.setFontSize(7);
-      doc.setTextColor(160, 160, 160);
-      doc.text('BarberFlow — Av. Paulista, 1000 · São Paulo/SP · (11) 99999-9999 · contato@barberflow.com.br · Seg a Sáb: 09h às 20h', 10, y);
-      doc.text(`Página ${i} de ${pageCount}`, doc.internal.pageSize.getWidth() - 10, y, { align: 'right' });
-    }
-
-    doc.save(`extrato-barberflow-${new Date().toISOString().slice(0, 10)}.pdf`);
-  };
-
-  // ─── Clique na aba Extrato: mostra aba + gera PDF ─────────────────────────
-  const handleTabExtrato = () => {
+  const handleTabExtrato = useCallback(() => {
     setTab('extrato');
-    handlePrint();
-  };
+    gerarPDF(filtrados, totalReceita);
+  }, [filtrados, totalReceita]);
 
   if (loading) return (
     <div className="min-h-[60vh] flex items-center justify-center">
