@@ -286,7 +286,8 @@ export default function Admin() {
 
   const handleTabExtrato = () => {
     setTab('extrato');
-    handlePrint(filtrados, totalReceita);
+    // Aguarda o estado atualizar antes de imprimir
+    setTimeout(() => handlePrint(filtrados, totalReceita), 100);
   };
 
   if (loading) return (
@@ -334,14 +335,14 @@ export default function Admin() {
         <button
           type="button"
           onClick={handleTabExtrato}
-          className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${tab === 'extrato' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
+          className={`cursor-pointer px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${tab === 'extrato' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
         >
           📋 Extrato
         </button>
         <button
           type="button"
           onClick={() => setTab('calendario')}
-          className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${tab === 'calendario' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
+          className={`cursor-pointer px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${tab === 'calendario' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
         >
           📅 Calendário
         </button>
