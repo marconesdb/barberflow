@@ -238,6 +238,7 @@ export default function Admin() {
     tfoot td { font-weight:900; border-top:2px solid #e5e7eb; background:#fafafa; }
     .rodape { text-align:center; font-size:9px; color:#a1a1aa; border-top:1px solid #e5e7eb; padding-top:10px; margin-top:20px; }
     @page { size:A4 landscape; margin:10mm 8mm; }
+    @media print { body { margin:0; padding:0; } }
   </style>
 </head>
 <body>

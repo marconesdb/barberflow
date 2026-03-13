@@ -47,35 +47,21 @@
 
 
 @media print {
-  /* Oculta tudo por padrão */
+  /* Oculta tudo — apenas o comprovante é impresso por esta regra */
   body * {
     visibility: hidden;
   }
 
-  /* Mostra apenas a área de impressão ativa */
-  #print-area,
-  #print-area *,
   #print-comprovante,
   #print-comprovante * {
     visibility: visible;
   }
 
-  /* Posiciona no topo da folha */
-  #print-area,
   #print-comprovante {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-  }
-
-  /* Extrato admin — paisagem */
-  #print-area {
-    padding: 10mm;
-  }
-
-  /* Comprovante — retrato */
-  #print-comprovante {
     padding: 20mm;
   }
 
@@ -83,26 +69,6 @@
     background: white !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-  }
-
-  /* Extrato admin */
-  #print-area table {
-    width: 100% !important;
-    border-collapse: collapse !important;
-    font-size: 8px !important;
-  }
-
-  #print-area th,
-  #print-area td {
-    padding: 3px 5px !important;
-    border: 1px solid #e5e7eb !important;
-    white-space: normal !important;
-    word-break: break-word !important;
-  }
-
-  #print-area thead {
-    background-color: #18181b !important;
-    color: white !important;
   }
 
   /* Comprovante */
@@ -118,8 +84,9 @@
     word-break: break-all !important;
   }
 
+  /* Comprovante usa A4 retrato */
   @page {
-    size: A4;
+    size: A4 portrait;
     margin: 0;
   }
 }
