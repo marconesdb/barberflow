@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Printer, Calendar, Users, Scissors, TrendingUp, Lock, Unlock, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import api from '../../services/api';
 
 const FERIADOS: Record<string, string> = {
@@ -206,88 +208,77 @@ export default function Admin() {
     .filter(a => a.status !== 'CANCELADO')
     .reduce((acc, a) => acc + a.servico.preco, 0);
 
-  // ─── Impressão via iframe oculto ──────────────────────────────────────────
+  // ─── Gera PDF real A4 landscape com jsPDF ────────────────────────────────
   const handlePrint = () => {
-    const linhas = filtrados.map((a, i) => `
-      <tr style="background:${i % 2 === 0 ? '#fff' : '#fafafa'}">
-        <td style="font-family:monospace">${a.codigoControle}</td>
-        <td>${new Date(a.dataHora).toLocaleDateString('pt-BR')} ${new Date(a.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
-        <td><strong>${a.cliente.nome}</strong></td>
-        <td>${a.cliente.email}<br/><small>${a.cliente.telefone || '—'}</small></td>
-        <td>${a.cliente.endereco || '—'}</td>
-        <td><strong>${a.servico.nome}</strong> <small>${a.servico.duracaoMinutos}min</small></td>
-        <td>${a.barbeiro.usuario.nome}</td>
-        <td><strong>R$ ${a.servico.preco.toFixed(2)}</strong></td>
-        <td>${a.status}</td>
-      </tr>
-    `).join('');
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
-    const html = `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8"/>
-  <title>Extrato BarberFlow</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; font-size: 9px; color: #18181b; background: white; }
-    h1 { font-size: 15px; font-weight: 900; margin-bottom: 2px; }
-    .sub { font-size: 9px; color: #71717a; margin-bottom: 12px; }
-    table { width: 100%; border-collapse: collapse; table-layout: auto; }
-    th { background: #18181b; color: white; padding: 5px; text-align: left; font-size: 7.5px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
-    td { padding: 4px 5px; border-bottom: 1px solid #f4f4f5; font-size: 7.5px; word-break: break-word; }
-    tfoot td { font-weight: 900; border-top: 2px solid #e5e7eb; background: #fafafa; }
-    .rodape { text-align: center; font-size: 8px; color: #a1a1aa; border-top: 1px solid #e5e7eb; padding-top: 8px; margin-top: 16px; }
-    @page { size: 297mm 210mm; margin: 10mm 8mm; }
-  </style>
-</head>
-<body>
-  <h1>BARBERFLOW — Extrato de Agendamentos</h1>
-  <p class="sub">Gerado em ${new Date().toLocaleString('pt-BR')}</p>
-  <table>
-    <thead>
-      <tr>
-        <th>Protocolo</th><th>Data/Hora</th><th>Cliente</th><th>Contato</th>
-        <th>Endereço</th><th>Serviço</th><th>Barbeiro</th><th>Valor</th><th>Status</th>
-      </tr>
-    </thead>
-    <tbody>${linhas}</tbody>
-    <tfoot>
-      <tr>
-        <td colspan="7">Total (${filtrados.filter(a => a.status !== 'CANCELADO').length} agendamentos)</td>
-        <td>R$ ${totalReceita.toFixed(2)}</td>
-        <td></td>
-      </tr>
-    </tfoot>
-  </table>
-  <div class="rodape">
-    <strong>BarberFlow — Av. Paulista, 1000 · São Paulo/SP</strong><br/>
-    (11) 99999-9999 · contato@barberflow.com.br · Seg a Sáb: 09h às 20h
-  </div>
-</body>
-</html>`;
+    // Cabeçalho
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('BARBERFLOW — Extrato de Agendamentos', 10, 14);
 
-    const old = document.getElementById('__bf_print__');
-    if (old) old.remove();
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(120, 120, 120);
+    doc.text(`Gerado em ${new Date().toLocaleString('pt-BR')}`, 10, 20);
+    doc.setTextColor(0, 0, 0);
 
-    const iframe = document.createElement('iframe');
-    iframe.id = '__bf_print__';
-    iframe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;border:none;opacity:0;pointer-events:none;';
-    document.body.appendChild(iframe);
+    // Tabela
+    autoTable(doc, {
+      startY: 25,
+      head: [['Protocolo', 'Data/Hora', 'Cliente', 'Contato', 'Endereço', 'Serviço', 'Barbeiro', 'Valor', 'Status']],
+      body: filtrados.map(a => [
+        a.codigoControle,
+        `${new Date(a.dataHora).toLocaleDateString('pt-BR')} ${new Date(a.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`,
+        a.cliente.nome,
+        `${a.cliente.email}\n${a.cliente.telefone || '—'}`,
+        a.cliente.endereco || '—',
+        `${a.servico.nome} (${a.servico.duracaoMinutos}min)`,
+        a.barbeiro.usuario.nome,
+        `R$ ${a.servico.preco.toFixed(2)}`,
+        a.status,
+      ]),
+      foot: [[
+        { content: `Total (${filtrados.filter(a => a.status !== 'CANCELADO').length} agendamentos)`, colSpan: 7, styles: { fontStyle: 'bold' } },
+        { content: `R$ ${totalReceita.toFixed(2)}`, styles: { fontStyle: 'bold' } },
+        '',
+      ]],
+      styles: { fontSize: 7, cellPadding: 2, overflow: 'linebreak' },
+      headStyles: { fillColor: [24, 24, 27], textColor: 255, fontStyle: 'bold', fontSize: 7 },
+      footStyles: { fillColor: [250, 250, 250], textColor: [24, 24, 27] },
+      alternateRowStyles: { fillColor: [250, 250, 250] },
+      columnStyles: {
+        0: { cellWidth: 38 },
+        1: { cellWidth: 22 },
+        2: { cellWidth: 32 },
+        3: { cellWidth: 40 },
+        4: { cellWidth: 30 },
+        5: { cellWidth: 38 },
+        6: { cellWidth: 26 },
+        7: { cellWidth: 18 },
+        8: { cellWidth: 20 },
+      },
+      margin: { left: 10, right: 10 },
+    });
 
-    const doc = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!doc) { toast.error('Erro ao preparar impressão'); return; }
+    // Rodapé
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      const y = doc.internal.pageSize.getHeight() - 6;
+      doc.setFontSize(7);
+      doc.setTextColor(160, 160, 160);
+      doc.text('BarberFlow — Av. Paulista, 1000 · São Paulo/SP · (11) 99999-9999 · contato@barberflow.com.br · Seg a Sáb: 09h às 20h', 10, y);
+      doc.text(`Página ${i} de ${pageCount}`, doc.internal.pageSize.getWidth() - 10, y, { align: 'right' });
+    }
 
-    doc.open();
-    doc.write(html);
-    doc.close();
+    doc.save(`extrato-barberflow-${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
 
-    iframe.onload = () => {
-      setTimeout(() => {
-        iframe.contentWindow?.focus();
-        iframe.contentWindow?.print();
-        setTimeout(() => iframe.remove(), 1000);
-      }, 300);
-    };
+  // ─── Clique na aba Extrato: mostra aba + gera PDF ─────────────────────────
+  const handleTabExtrato = () => {
+    setTab('extrato');
+    handlePrint();
   };
 
   if (loading) return (
@@ -308,7 +299,7 @@ export default function Admin() {
         <button
           type="button"
           onClick={handlePrint}
-          className="print:hidden flex items-center gap-2 bg-zinc-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-zinc-800 transition-all cursor-pointer"
+          className="flex items-center gap-2 bg-zinc-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-zinc-800 transition-all cursor-pointer"
         >
           <Printer className="w-4 h-4" /> Imprimir Extrato
         </button>
@@ -334,7 +325,7 @@ export default function Admin() {
       <div className="flex gap-2">
         <button
           type="button"
-          onClick={() => setTab('extrato')}
+          onClick={handleTabExtrato}
           className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${tab === 'extrato' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
         >
           📋 Extrato
