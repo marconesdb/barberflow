@@ -206,9 +206,8 @@ export default function Admin() {
     .filter(a => a.status !== 'CANCELADO')
     .reduce((acc, a) => acc + a.servico.preco, 0);
 
-  // ─── Imprime via iframe oculto (Chrome respeita @page corretamente) ────────
+  // ─── Impressão via iframe oculto ──────────────────────────────────────────
   const handlePrint = () => {
-
     const linhas = filtrados.map((a, i) => `
       <tr style="background:${i % 2 === 0 ? '#fff' : '#fafafa'}">
         <td style="font-family:monospace">${a.codigoControle}</td>
@@ -230,49 +229,15 @@ export default function Admin() {
   <title>Extrato BarberFlow</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: Arial, sans-serif;
-      font-size: 9px;
-      color: #18181b;
-      background: white;
-      padding: 0;
-    }
+    body { font-family: Arial, sans-serif; font-size: 9px; color: #18181b; background: white; }
     h1 { font-size: 15px; font-weight: 900; margin-bottom: 2px; }
     .sub { font-size: 9px; color: #71717a; margin-bottom: 12px; }
     table { width: 100%; border-collapse: collapse; table-layout: auto; }
-    th {
-      background: #18181b;
-      color: white;
-      padding: 5px 5px;
-      text-align: left;
-      font-size: 7.5px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      white-space: nowrap;
-    }
-    td {
-      padding: 4px 5px;
-      border-bottom: 1px solid #f4f4f5;
-      font-size: 7.5px;
-      word-break: break-word;
-    }
-    tfoot td {
-      font-weight: 900;
-      border-top: 2px solid #e5e7eb;
-      background: #fafafa;
-    }
-    .rodape {
-      text-align: center;
-      font-size: 8px;
-      color: #a1a1aa;
-      border-top: 1px solid #e5e7eb;
-      padding-top: 8px;
-      margin-top: 16px;
-    }
-    @page {
-      size: 297mm 210mm;
-      margin: 10mm 8mm;
-    }
+    th { background: #18181b; color: white; padding: 5px; text-align: left; font-size: 7.5px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+    td { padding: 4px 5px; border-bottom: 1px solid #f4f4f5; font-size: 7.5px; word-break: break-word; }
+    tfoot td { font-weight: 900; border-top: 2px solid #e5e7eb; background: #fafafa; }
+    .rodape { text-align: center; font-size: 8px; color: #a1a1aa; border-top: 1px solid #e5e7eb; padding-top: 8px; margin-top: 16px; }
+    @page { size: 297mm 210mm; margin: 10mm 8mm; }
   </style>
 </head>
 <body>
@@ -301,12 +266,11 @@ export default function Admin() {
 </body>
 </html>`;
 
-    // Remove iframe anterior se existir
-    const old = document.getElementById('__barberflow_print_frame__');
+    const old = document.getElementById('__bf_print__');
     if (old) old.remove();
 
     const iframe = document.createElement('iframe');
-    iframe.id = '__barberflow_print_frame__';
+    iframe.id = '__bf_print__';
     iframe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;border:none;opacity:0;pointer-events:none;';
     document.body.appendChild(iframe);
 
@@ -317,12 +281,10 @@ export default function Admin() {
     doc.write(html);
     doc.close();
 
-    // Aguarda o iframe renderizar antes de imprimir
     iframe.onload = () => {
       setTimeout(() => {
         iframe.contentWindow?.focus();
         iframe.contentWindow?.print();
-        // Remove após fechar o diálogo de impressão
         setTimeout(() => iframe.remove(), 1000);
       }, 300);
     };
@@ -369,17 +331,21 @@ export default function Admin() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2" style={{ position: 'relative', zIndex: 50 }}>
-        <a href="#extrato" onClick={e => { e.preventDefault(); setTab('extrato'); }}
-          style={{ cursor: 'pointer', userSelect: 'none' }}
-          className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${tab === 'extrato' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => setTab('extrato')}
+          className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${tab === 'extrato' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
+        >
           📋 Extrato
-        </a>
-        <a href="#calendario" onClick={e => { e.preventDefault(); setTab('calendario'); }}
-          style={{ cursor: 'pointer', userSelect: 'none' }}
-          className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${tab === 'calendario' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}>
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('calendario')}
+          className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${tab === 'calendario' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
+        >
           📅 Calendário
-        </a>
+        </button>
       </div>
 
       {/* Tab Extrato */}
