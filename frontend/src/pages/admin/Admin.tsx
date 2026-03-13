@@ -206,8 +206,9 @@ export default function Admin() {
     .filter(a => a.status !== 'CANCELADO')
     .reduce((acc, a) => acc + a.servico.preco, 0);
 
-  // ─── Imprime em nova janela limpa ─────────────────────────────────────────
+  // ─── Imprime via iframe oculto (Chrome respeita @page corretamente) ────────
   const handlePrint = () => {
+
     const linhas = filtrados.map((a, i) => `
       <tr style="background:${i % 2 === 0 ? '#fff' : '#fafafa'}">
         <td style="font-family:monospace">${a.codigoControle}</td>
@@ -229,34 +230,30 @@ export default function Admin() {
   <title>Extrato BarberFlow</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    html, body {
-      width: 297mm;
+    body {
       font-family: Arial, sans-serif;
       font-size: 9px;
       color: #18181b;
       background: white;
+      padding: 0;
     }
-
-    body { padding: 10mm 8mm; }
-
-    h1 { font-size: 16px; font-weight: 900; margin-bottom: 2px; }
-    .sub { font-size: 9px; color: #71717a; margin-bottom: 14px; }
-
-    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    h1 { font-size: 15px; font-weight: 900; margin-bottom: 2px; }
+    .sub { font-size: 9px; color: #71717a; margin-bottom: 12px; }
+    table { width: 100%; border-collapse: collapse; table-layout: auto; }
     th {
       background: #18181b;
       color: white;
-      padding: 5px 6px;
+      padding: 5px 5px;
       text-align: left;
-      font-size: 8px;
+      font-size: 7.5px;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
     }
     td {
-      padding: 4px 6px;
+      padding: 4px 5px;
       border-bottom: 1px solid #f4f4f5;
-      font-size: 8px;
+      font-size: 7.5px;
       word-break: break-word;
     }
     tfoot td {
@@ -266,28 +263,15 @@ export default function Admin() {
     }
     .rodape {
       text-align: center;
-      font-size: 9px;
+      font-size: 8px;
       color: #a1a1aa;
       border-top: 1px solid #e5e7eb;
-      padding-top: 10px;
-      margin-top: 20px;
+      padding-top: 8px;
+      margin-top: 16px;
     }
-
-    /* Garante A4 landscape e neutraliza qualquer CSS global que vaze */
     @page {
-      size: A4 landscape !important;
-      margin: 10mm 8mm !important;
-    }
-
-    @media print {
-      html, body {
-        width: 297mm !important;
-        padding: 0 !important;
-        margin: 0 !important;
-      }
-      /* Neutraliza o "body * { visibility: hidden }" do CSS global */
-      * { visibility: visible !important; }
-      body * { visibility: visible !important; }
+      size: 297mm 210mm;
+      margin: 10mm 8mm;
     }
   </style>
 </head>
@@ -314,17 +298,34 @@ export default function Admin() {
     <strong>BarberFlow — Av. Paulista, 1000 · São Paulo/SP</strong><br/>
     (11) 99999-9999 · contato@barberflow.com.br · Seg a Sáb: 09h às 20h
   </div>
-  <script>window.onload = () => { window.print(); window.close(); }<\/script>
 </body>
 </html>`;
 
-    const janela = window.open('', '_blank', 'width=1200,height=800');
-    if (!janela) {
-      toast.error('Permita popups para imprimir');
-      return;
-    }
-    janela.document.write(html);
-    janela.document.close();
+    // Remove iframe anterior se existir
+    const old = document.getElementById('__barberflow_print_frame__');
+    if (old) old.remove();
+
+    const iframe = document.createElement('iframe');
+    iframe.id = '__barberflow_print_frame__';
+    iframe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;border:none;opacity:0;pointer-events:none;';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!doc) { toast.error('Erro ao preparar impressão'); return; }
+
+    doc.open();
+    doc.write(html);
+    doc.close();
+
+    // Aguarda o iframe renderizar antes de imprimir
+    iframe.onload = () => {
+      setTimeout(() => {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+        // Remove após fechar o diálogo de impressão
+        setTimeout(() => iframe.remove(), 1000);
+      }, 300);
+    };
   };
 
   if (loading) return (
