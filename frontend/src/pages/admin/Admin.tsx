@@ -206,59 +206,67 @@ export default function Admin() {
     .filter(a => a.status !== 'CANCELADO')
     .reduce((acc, a) => acc + a.servico.preco, 0);
 
-  // ─── Abre janela limpa do extrato e chama window.print() ─────────────────
+  // ─── Mesmo padrão do Agendar.tsx — layout em cards por agendamento ────────
   const handlePrint = (lista: Agendamento[], total: number) => {
     const linhas = lista.map((a, i) => `
-      <tr style="background:${i % 2 === 0 ? '#fff' : '#fafafa'}">
-        <td style="font-family:monospace;font-size:7px">${a.codigoControle}</td>
-        <td>${new Date(a.dataHora).toLocaleDateString('pt-BR')} ${new Date(a.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
-        <td><strong>${a.cliente.nome}</strong></td>
-        <td>${a.cliente.email}<br/><small>${a.cliente.telefone || '—'}</small></td>
-        <td>${a.cliente.endereco || '—'}</td>
-        <td><strong>${a.servico.nome}</strong> <small>${a.servico.duracaoMinutos}min</small></td>
-        <td>${a.barbeiro.usuario.nome}</td>
-        <td><strong>R$ ${a.servico.preco.toFixed(2)}</strong></td>
-        <td>${a.status}</td>
-      </tr>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:6px 8px;background:${i % 2 === 0 ? '#fff' : '#fafafa'};border-bottom:1px solid #f4f4f5;font-size:9px;">
+        <div>
+          <span style="font-family:monospace;font-size:8px;color:#71717a">${a.codigoControle}</span><br/>
+          <strong>${a.cliente.nome}</strong><br/>
+          <span style="color:#71717a">${a.cliente.email}</span><br/>
+          <span style="color:#71717a">${a.cliente.telefone || '—'}</span>
+        </div>
+        <div>
+          <strong>${a.servico.nome}</strong> <span style="color:#71717a">${a.servico.duracaoMinutos}min</span><br/>
+          Barbeiro: ${a.barbeiro.usuario.nome}<br/>
+          Endereço: ${a.cliente.endereco || '—'}
+        </div>
+        <div style="text-align:right">
+          ${new Date(a.dataHora).toLocaleDateString('pt-BR')} ${new Date(a.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}<br/>
+          <strong style="font-size:11px">R$ ${a.servico.preco.toFixed(2)}</strong><br/>
+          <span style="display:inline-block;margin-top:3px;padding:2px 8px;border-radius:99px;font-size:8px;font-weight:700;background:${
+            a.status === 'CONFIRMADO' ? '#dcfce7' :
+            a.status === 'CANCELADO' ? '#fee2e2' :
+            a.status === 'CONCLUIDO' ? '#dbeafe' : '#fef9c3'
+          };color:${
+            a.status === 'CONFIRMADO' ? '#15803d' :
+            a.status === 'CANCELADO' ? '#b91c1c' :
+            a.status === 'CONCLUIDO' ? '#1d4ed8' : '#854d0e'
+          }">${a.status}</span>
+        </div>
+      </div>
     `).join('');
 
-    const html = `<!DOCTYPE html>
+    const conteudo = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8"/>
   <title>Extrato BarberFlow</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; font-size: 8px; color: #18181b; padding: 8mm; }
-    h1 { font-size: 14px; font-weight: 900; margin-bottom: 2px; }
-    .sub { font-size: 8px; color: #71717a; margin-bottom: 10px; }
-    table { width: 100%; border-collapse: collapse; }
-    th { background: #18181b; color: white; padding: 4px 5px; text-align: left; font-size: 7px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
-    td { padding: 3px 5px; border-bottom: 1px solid #f4f4f5; font-size: 7.5px; word-break: break-word; }
-    tfoot td { font-weight: 900; border-top: 2px solid #e5e7eb; background: #fafafa; }
-    .rodape { text-align: center; font-size: 7px; color: #a1a1aa; border-top: 1px solid #e5e7eb; padding-top: 6px; margin-top: 12px; }
-    @page { size: A4 landscape; margin: 8mm; }
+    body { font-family: Arial, sans-serif; padding: 14mm; font-size: 10px; color: #18181b; }
+    h1 { font-size: 20px; font-weight: 900; }
+    .sub { color: #71717a; margin: 3px 0 16px; font-size: 9px; }
+    .header-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; background: #18181b; color: white; padding: 6px 8px; font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+    .footer-row { display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 6px 8px; background: #fafafa; border-top: 2px solid #e5e7eb; font-weight: 900; font-size: 9px; }
+    .rodape { text-align: center; font-size: 8px; color: #a1a1aa; border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 16px; }
+    @page { size: A4; margin: 0; }
   </style>
 </head>
 <body>
   <h1>BARBERFLOW — Extrato de Agendamentos</h1>
   <p class="sub">Gerado em ${new Date().toLocaleString('pt-BR')}</p>
-  <table>
-    <thead>
-      <tr>
-        <th>Protocolo</th><th>Data/Hora</th><th>Cliente</th><th>Contato</th>
-        <th>Endereço</th><th>Serviço</th><th>Barbeiro</th><th>Valor</th><th>Status</th>
-      </tr>
-    </thead>
-    <tbody>${linhas}</tbody>
-    <tfoot>
-      <tr>
-        <td colspan="7">Total (${lista.filter(a => a.status !== 'CANCELADO').length} agendamentos)</td>
-        <td>R$ ${total.toFixed(2)}</td>
-        <td></td>
-      </tr>
-    </tfoot>
-  </table>
+  <div class="header-cols">
+    <div>Protocolo / Cliente / Contato</div>
+    <div>Serviço / Barbeiro / Endereço</div>
+    <div style="text-align:right">Data / Valor / Status</div>
+  </div>
+  ${linhas}
+  <div class="footer-row">
+    <div colspan="2">Total (${lista.filter(a => a.status !== 'CANCELADO').length} agendamentos)</div>
+    <div></div>
+    <div style="text-align:right">R$ ${total.toFixed(2)}</div>
+  </div>
   <div class="rodape">
     <strong>BarberFlow — Av. Paulista, 1000 · São Paulo/SP</strong><br/>
     (11) 99999-9999 · contato@barberflow.com.br · Seg a Sáb: 09h às 20h
@@ -269,10 +277,11 @@ export default function Admin() {
 </body>
 </html>`;
 
-    const w = window.open('', '_blank');
-    if (!w) { toast.error('Permita popups para imprimir'); return; }
-    w.document.write(html);
-    w.document.close();
+    const janela = window.open('', '_blank', 'width=800,height=600');
+    if (!janela) { toast.error('Permita popups para imprimir'); return; }
+    janela.document.write(conteudo);
+    janela.document.close();
+    janela.focus();
   };
 
   const handleTabExtrato = () => {
