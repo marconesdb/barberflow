@@ -44,20 +44,18 @@
   animation: float 6s ease-in-out infinite;
 }
 
-
 @media print {
-  /* Oculta tudo — apenas o comprovante do cliente é impresso por esta regra.
-     O extrato admin abre em janela própria e neutraliza esse bloco internamente. */
-  body * {
+  /* Apenas para impressão do comprovante do cliente (não afeta o extrato admin) */
+  body.print-comprovante * {
     visibility: hidden;
   }
 
-  #print-comprovante,
-  #print-comprovante * {
+  body.print-comprovante #print-comprovante,
+  body.print-comprovante #print-comprovante * {
     visibility: visible;
   }
 
-  #print-comprovante {
+  body.print-comprovante #print-comprovante {
     position: absolute;
     top: 0;
     left: 0;
@@ -71,20 +69,18 @@
     print-color-adjust: exact;
   }
 
-  /* Comprovante */
-  #print-comprovante table {
+  body.print-comprovante table {
     width: 100% !important;
     border-collapse: collapse !important;
     font-size: 10px !important;
   }
 
-  #print-comprovante td {
+  body.print-comprovante td {
     padding: 5px 4px !important;
     border-bottom: 1px solid #f4f4f5 !important;
     word-break: break-all !important;
   }
 
-  /* Comprovante do cliente usa A4 retrato */
   @page {
     size: A4 portrait;
     margin: 0;
